@@ -1,11 +1,12 @@
-pip install numpy
-pip install wheel
-pip install pipwin
-pipwin install shapely
-pipwin install gdal
-pipwin install fiona
-pipwin install pyproj
-pipwin install six
-pipwin install rtree
-pipwin install geopandas
-pip install dash
+numpy
+wheel
+pipwin
+shapely
+gdal
+fiona
+pyproj
+six
+rtree
+geopandas
+dash
+dash-leaflet
