@@ -9,3 +9,4 @@ pipwin install six
 pipwin install rtree
 pipwin install geopandas
 pip install dash
+pip install dash-leaflet
