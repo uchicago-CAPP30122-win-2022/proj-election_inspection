@@ -10,3 +10,4 @@ rtree
 geopandas
 dash
 dash-leaflet
+folium==0.12.1.post1
