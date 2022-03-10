@@ -1,17 +1,3 @@
-<<<<<<< HEAD
-pip install numpy
-pip install wheel
-pip install pipwin
-pipwin install shapely
-pipwin install gdal
-pipwin install fiona
-pipwin install pyproj
-pipwin install six
-pipwin install rtree
-pipwin install geopandas
-pip install dash
-pip install dash-leaflet
-=======
 numpy
 wheel
 pipwin
@@ -24,4 +10,3 @@ rtree
 geopandas
 dash
 dash-leaflet
->>>>>>> 9beaca7dd086fb515f3eccda7e6a87ae53b881ee
