@@ -7,7 +7,7 @@ import re
 # Data from Redistricting Data Hub (VTD-2020 level)
 
 # 2020 election turnout data
-turnout2020_df = pd.read_csv('data/MI_l2_turnout_stats_vtd20.csv', header=0)
+turnout2020_df = pd.read_csv('../data/csv/MI_l2_turnout_stats_vtd20.csv', header=0)
 turnout2020_df = turnout2020_df.loc[:, ['vtd_geoid20', 'g20201103_reg_all',
                                         'g20201103_voted_all']]
 turnout2020_df = turnout2020_df.rename(columns={'vtd_geoid20': 'GEOID20',
@@ -20,7 +20,7 @@ turnout2020_df = turnout2020_df[missing_obs]
 turnout2020_df['GEOID20'] = turnout2020_df['GEOID20'].astype('int64')
 
 # Ethnic groupings data
-race_census_df = pd.read_csv('data/mi_pl2020_vtd.csv', header=0)
+race_census_df = pd.read_csv('../data/csv/mi_pl2020_vtd.csv', header=0)
 race_census_df = race_census_df.loc[:, ['GEOID20', 'COUNTY', 'VTD', 'POP100',
                                         'P0010002', 'P0010003', 'P0010004', 'P0010005',
                                         'P0010006', 'P0010007', 'P0010009', 'P0010026',
@@ -46,7 +46,7 @@ race_census_df = race_census_df[missing_obs]
 race_census_df['GEOID20'] = race_census_df['GEOID20'].astype('int64')
 
 # Lagged election data
-lagged_2018_elections_df = pd.read_csv('data/mi_2018_2020_vtd.csv', header=0)
+lagged_2018_elections_df = pd.read_csv('../data/csv/mi_2018_2020_vtd.csv', header=0)
 lagged_2018_elections_df = lagged_2018_elections_df.loc[:, ['GEOID20',
                                 'G18GOVRSCH', 'G18GOVDWHI', 'G18GOVLGEL', 'G18GOVTSCH',
                                 'G18GOVGKUR', 'G18GOVNBUT']]
@@ -65,7 +65,7 @@ lagged_2018_elections_df = lagged_2018_elections_df[missing_obs]
 lagged_2018_elections_df['GEOID20'] = lagged_2018_elections_df['GEOID20'].astype('int64')
 
 # Election race closeness data
-election2020_closeness_df = pd.read_csv('data/mi_2020_2020_vtd.csv', header=0)
+election2020_closeness_df = pd.read_csv('../data/csv/mi_2020_2020_vtd.csv', header=0)
 election2020_closeness_df['2020_vote_share_diff'] = abs(
     election2020_closeness_df['G20PRERTRU']
     - election2020_closeness_df['G20PREDBID'])
@@ -78,7 +78,7 @@ election2020_closeness_df['GEOID20'] = election2020_closeness_df['GEOID20'].asty
 # Data from Census Bureau (County level)
 
 # Migration data
-migration_census_df = pd.read_excel('data/county-to-county-2015-2019-ins-outs'
+migration_census_df = pd.read_excel('../data/csv/county-to-county-2015-2019-ins-outs'
                                     '-nets-gross.xlsx',
                                     sheet_name='Michigan',
                                     header=2)
@@ -100,7 +100,7 @@ migration_census_df = migration_census_df.groupby('county_code').sum()
 migration_census_df = migration_census_df.reset_index()
 
 # Population growth data
-growth_census_df = pd.read_excel('data/co-est2019-annchg-26.xlsx', skiprows=2,
+growth_census_df = pd.read_excel('../data/csv/co-est2019-annchg-26.xlsx', skiprows=2,
                                  header=0)
 growth_census_df = growth_census_df.iloc[:, [0, 4]]
 growth_census_df = growth_census_df.dropna()
@@ -117,11 +117,11 @@ growth_census_df = growth_census_df.drop(['county_name'], axis=1)
 
 # Home ownership data
 # Still working on code
-home_ownership_census_df = pd.read_csv('data/ACSDP1Y2019.DP04-2022-03-11T175751.csv',
+home_ownership_census_df = pd.read_csv('../data/csv/ACSDP1Y2019.DP04-2022-03-11T175751.csv',
                                        header=0)
 
 # Urban population data
-urban_pop_census_df = pd.read_excel('data/PctUrbanRural_County.xls', header=0)
+urban_pop_census_df = pd.read_excel('../data/csv/PctUrbanRural_County.xls', header=0)
 urban_pop_census_df = urban_pop_census_df[urban_pop_census_df['STATENAME']
                                           == 'Michigan']
 urban_pop_census_df = urban_pop_census_df.loc[:, ['COUNTY',
@@ -136,7 +136,7 @@ urban_pop_census_df = urban_pop_census_df.rename(columns={'COUNTY': 'county_code
 
 # Income inequality data
 # Still working on code
-gini_census_df = pd.read_csv('data/ACSDT1Y2019.B19083-2022-03-11T182331.csv',
+gini_census_df = pd.read_csv('../data/csv/ACSDT1Y2019.B19083-2022-03-11T182331.csv',
                              header=0)
 
 # Mappings for data joining
