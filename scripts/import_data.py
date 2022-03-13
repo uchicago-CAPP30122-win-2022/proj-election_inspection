@@ -118,7 +118,7 @@ def process_data():
     migration_census_df['county_code'] = migration_census_df[
         'county_code'].astype('int64')
     migration_census_df['county_name'] = [re.sub(r'(County$)', '',
-                                                county).strip() for county in
+                                        county).strip() for county in
                                         migration_census_df['county_name']]
     # Create a 'county name' to 'county code' mapping for later use
     county_name_to_code = {row[1]: row[0] for _, row in 
@@ -138,26 +138,27 @@ def process_data():
         growth_census_df.columns[1]: 'c_pop_perc_change'})
     growth_census_df = growth_census_df.drop([2], axis=0)
     growth_census_df['county_name'] = [re.sub(r'(County, Michigan$)', '',
-                                            county).strip('. ') for county in
-                                    growth_census_df['county_name']]
+                                        county).strip('. ') for county in
+                                        growth_census_df['county_name']]
     growth_census_df['county_code'] = [county_name_to_code[county]
-                                    for county in growth_census_df['county_name']]
+                                for county in growth_census_df['county_name']]
     growth_census_df = growth_census_df.drop(['county_name'], axis=1)
 
     # Home ownership data
     home_ownership_census_df = pd.read_csv('../data/csv/'
-                                        'ACSDP1Y2019.DP04-2022-03-11T175751.csv',
-                                        header=0)
+                                    'ACSDP1Y2019.DP04-2022-03-11T175751.csv',
+                                    header=0)
 
     # Urban population data
     urban_pop_census_df = pd.read_excel('../data/csv/PctUrbanRural_County.xls',
                                          header=0)
-    urban_pop_census_df = urban_pop_census_df[urban_pop_census_df['STATENAME']
-                                            == 'Michigan']
+    urban_pop_census_df = urban_pop_census_df[urban_pop_census_df['STATENAME'] ==
+                                                                    'Michigan']
     urban_pop_census_df = urban_pop_census_df.loc[:, ['COUNTY',
                                                     'POP_COU',
                                                     'POP_URBAN']]
-    urban_pop_census_df['c_pop_pct_urban'] = (urban_pop_census_df['POP_URBAN'] /
+    urban_pop_census_df['c_pop_pct_urban'] = (
+                                            urban_pop_census_df['POP_URBAN'] /
                                             urban_pop_census_df['POP_COU'])
     urban_pop_census_df = urban_pop_census_df.drop(['POP_COU', 'POP_URBAN'], 
                                                                         axis=1)
@@ -174,7 +175,8 @@ def process_data():
 
     # Mappings for data joining
     # VTD to County FIPS code mapping
-    vtd_to_county_map = {row[0]: row[1] for _, row in race_census_df.iterrows()}
+    vtd_to_county_map = {row[0]: row[1] for _, row in 
+                                                race_census_df.iterrows()}
 
     race_census_df = race_census_df.drop(['COUNTY'], axis=1)
 
