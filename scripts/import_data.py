@@ -27,12 +27,12 @@ def process_data():
     turnout2020_df = pd.read_csv('../data/csv/MI_l2_turnout_stats_vtd20.csv',
                                      header=0)
     turnout2020_df = turnout2020_df.loc[:, ['vtd_geoid20', 'g20201103_reg_all',
-                                            'g20201103_voted_all']]
+                                                        'g20201103_voted_all']]
     turnout2020_df = turnout2020_df.rename(columns={'vtd_geoid20': 'GEOID20',
                                     'g20201103_voted_all': 'total2020_voted'})
     turnout2020_df['turnout2020_registered'] = (
-                                        turnout2020_df['total2020_voted'] /
-                                        turnout2020_df['g20201103_reg_all'])
+                                    turnout2020_df['total2020_voted'] /
+                                    turnout2020_df['g20201103_reg_all'])
     turnout2020_df = turnout2020_df.drop(['g20201103_reg_all'], axis=1)
     missing_obs = [geoid[-1] != 'Z' for geoid in turnout2020_df['GEOID20']]
     turnout2020_df = turnout2020_df[missing_obs]
@@ -59,8 +59,7 @@ def process_data():
                                             'P0010007': 'pop_pac_islander_alone',
                                             'P0010009': 'pop_two_races'})
     race_census_df = race_census_df.drop(['P0010026', 'P0010047',
-                                        'P0010063', 'P0010070'],
-                                        axis=1)
+                                        'P0010063', 'P0010070'], axis=1)
     missing_obs = [geoid[-1] != 'Z' for geoid in race_census_df['GEOID20']]
     race_census_df = race_census_df[missing_obs]
     race_census_df['GEOID20'] = race_census_df['GEOID20'].astype('int64')
@@ -88,9 +87,10 @@ def process_data():
     lagged_2018_elections_df['GEOID20'] = (lagged_2018_elections_df['GEOID20']
                                                                 .astype('int64'))
 
-    # Election race closeness data
+    # 2020 presidential election race closeness data
     election2020_closeness_df = pd.read_csv('../data/csv/mi_2020_2020_vtd.csv',
                                                                      header=0)
+    # Election closeness calculated by taking difference of top two candidates
     election2020_closeness_df['2020_vote_share_diff'] = abs(
         election2020_closeness_df['G20PRERTRU']
         - election2020_closeness_df['G20PREDBID'])
@@ -145,18 +145,43 @@ def process_data():
     growth_census_df = growth_census_df.drop(['county_name'], axis=1)
 
     # Home ownership data
-    home_ownership_census_df = pd.read_csv('../data/csv/'
-                                    'ACSDP1Y2019.DP04-2022-03-11T175751.csv',
-                                    header=0)
+    tract_to_county_df = pd.read_csv('../data/csv/mi_pl2020_t.csv', header=0)
+    tract_to_county_df = tract_to_county_df.loc[:, ['GEOID', 'COUNTY']]
+    tract_to_county_dict = {row[0]: row[1] for _, row in 
+                                                tract_to_county_df.iterrows()}
+    home_ownership_census_df = pd.read_csv(
+        '../data/csv/ACSDP5Y2018.DP04_data_with_overlays_2022-03-12T164813.csv',
+                                                                    header=0)
+    home_ownership_census_df = home_ownership_census_df.loc[:, 
+                                ['GEO_ID', 'DP04_0001E', 'DP04_0080E']]
+    home_ownership_census_df['county_code'] = [tract_to_county_dict[geoid] 
+                                if tract_to_county_dict.get(geoid) else np.nan
+                                for geoid in home_ownership_census_df['GEO_ID']]
+    home_ownership_census_df = (home_ownership_census_df[1:]
+                                        .drop(['GEO_ID'], axis=1))
+    home_ownership_census_df = home_ownership_census_df.dropna()
+    home_ownership_census_df['DP04_0001E'] = (
+                        home_ownership_census_df['DP04_0001E'].astype('int64'))
+    home_ownership_census_df['DP04_0080E'] = (
+                        home_ownership_census_df['DP04_0080E'].astype('int64'))
+    home_ownership_census_df = (home_ownership_census_df
+                                        .groupby('county_code').sum())
+    home_ownership_census_df = home_ownership_census_df.reset_index()
+    home_ownership_census_df['c_perc_owner_occupied_house'] = (
+                                    home_ownership_census_df['DP04_0080E'] / 
+                                    home_ownership_census_df['DP04_0001E'])
+    home_ownership_census_df = home_ownership_census_df.drop(['DP04_0001E', 
+                                                        'DP04_0080E'], axis=1)
+    home_ownership_census_df['county_code'] = (
+                        home_ownership_census_df['county_code'].astype('int64'))
 
     # Urban population data
     urban_pop_census_df = pd.read_excel('../data/csv/PctUrbanRural_County.xls',
                                          header=0)
     urban_pop_census_df = urban_pop_census_df[urban_pop_census_df['STATENAME'] ==
                                                                     'Michigan']
-    urban_pop_census_df = urban_pop_census_df.loc[:, ['COUNTY',
-                                                    'POP_COU',
-                                                    'POP_URBAN']]
+    urban_pop_census_df = urban_pop_census_df.loc[:, ['COUNTY', 'POP_COU', 
+                                                                'POP_URBAN']]
     urban_pop_census_df['c_pop_pct_urban'] = (
                                             urban_pop_census_df['POP_URBAN'] /
                                             urban_pop_census_df['POP_COU'])
@@ -184,19 +209,17 @@ def process_data():
 
 
     # Merging of datasets
-    participation_df = (turnout2020_df.merge(race_census_df, how='left', 
-                                                                on='GEOID20')
-                        .merge(lagged_2018_elections_df, how='left', 
-                                                                on='GEOID20')
-                        .merge(election2020_closeness_df, how='left', 
-                                                                on='GEOID20'))
+    participation_df = (turnout2020_df
+                    .merge(race_census_df, how='left', on='GEOID20')
+                    .merge(lagged_2018_elections_df, how='left', on='GEOID20')
+                    .merge(election2020_closeness_df, how='left', on='GEOID20'))
     participation_df['county_code'] = [int(vtd_to_county_map[geoid]) 
                                         for geoid in participation_df['GEOID20']]
-    participation_df = (participation_df.merge(migration_census_df, 
-                                                how='left', 
-                                                on='county_code')
-                        .merge(urban_pop_census_df, how='left', on='county_code')
-                        .merge(growth_census_df, how='left', on='county_code'))
+    participation_df = (participation_df
+                    .merge(migration_census_df, how='left', on='county_code')
+                    .merge(urban_pop_census_df, how='left', on='county_code')
+                    .merge(growth_census_df, how='left', on='county_code')
+                    .merge(home_ownership_census_df, how='left', on='county_code'))
 
     # Final feature calculations
     participation_df['c_pop_perc_migration'] = (
@@ -241,8 +264,8 @@ def process_data():
                         'pop_perc_black', 'pop_perc_am_indian', 'pop_perc_asian',
                         'pop_perc_pac_islander', 'COUNTY_FIPS',
                         'c_pop_pct_urban', 'c_pop_perc_change',
-                        'c_pop_perc_migration', 'total2020_voted',
-                        'turnout2020_registered']]
+                        'c_pop_perc_migration', 'c_perc_owner_occupied_house', 
+                        'total2020_voted', 'turnout2020_registered']]
 
     participation_df.to_csv('../data/participation.csv')
 
