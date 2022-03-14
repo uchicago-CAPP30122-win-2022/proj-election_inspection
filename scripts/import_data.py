@@ -193,21 +193,27 @@ def process_data():
                                                     {'COUNTY': 'county_code'})
 
     # Income inequality data
-    gini_census_df = pd.read_csv('../data/csv/'
-                                'ACSDT1Y2019.B19083-2022-03-11T182331.csv',
-                                header=0)
+    gini_census_df = pd.read_csv(
+                        '../data/csv/ACSDT5Y2019.B19083-2022-03-14T021522.csv',
+                        header=0)
+    gini_census_df = gini_census_df.iloc[:, [i for i in range(1, 167, 2)]]
+    gini_census_df = gini_census_df.transpose()
+    gini_census_df = gini_census_df.reset_index()
+    gini_census_df.columns = ['county_name', 'c_gini_index']
+    gini_census_df['county_name'] = [re.sub(r'(County, Michigan!!Estimate$)', '',
+                                            county).strip('. ') for county in
+                                        gini_census_df['county_name']]
+    gini_census_df['county_code'] = [county_name_to_code[county]
+                                    for county in gini_census_df['county_name']]
+    gini_census_df = gini_census_df.drop(['county_name'], axis=1)
 
 
-    # Mappings for data joining
     # VTD to County FIPS code mapping
     vtd_to_county_map = {row[0]: row[1] for _, row in 
                                                 race_census_df.iterrows()}
-
     race_census_df = race_census_df.drop(['COUNTY'], axis=1)
 
-    # Census tract to County FIPS code mapping
-
-
+    
     # Merging of datasets
     participation_df = (turnout2020_df
                     .merge(race_census_df, how='left', on='GEOID20')
@@ -219,8 +225,10 @@ def process_data():
                     .merge(migration_census_df, how='left', on='county_code')
                     .merge(urban_pop_census_df, how='left', on='county_code')
                     .merge(growth_census_df, how='left', on='county_code')
-                    .merge(home_ownership_census_df, how='left', on='county_code'))
+                    .merge(home_ownership_census_df, how='left', on='county_code')
+                    .merge(gini_census_df, how='left', on='county_code'))
 
+    
     # Final feature calculations
     participation_df['c_pop_perc_migration'] = (
                                     participation_df['gross_county_migration'] /
@@ -254,6 +262,7 @@ def process_data():
                     'pop_white_alone', 'pop_black_alone', 'pop_am_indian_alone',
                     'pop_asian_alone', 'pop_pac_islander_alone'], axis=1)
 
+
     # Reordering of dataframe
     participation_df = participation_df.rename(columns=
                                                 {'county_code': 'COUNTY_FIPS'})
@@ -262,10 +271,12 @@ def process_data():
                         'pop_perc_one_race', 'pop_perc_two_races', 
                         'pop_perc_three_or_more_races', 'pop_perc_white', 
                         'pop_perc_black', 'pop_perc_am_indian', 'pop_perc_asian',
-                        'pop_perc_pac_islander', 'COUNTY_FIPS',
-                        'c_pop_pct_urban', 'c_pop_perc_change',
-                        'c_pop_perc_migration', 'c_perc_owner_occupied_house', 
-                        'total2020_voted', 'turnout2020_registered']]
+                        'pop_perc_pac_islander', 'COUNTY_FIPS', 
+                        'c_pop_pct_urban', 'c_pop_perc_change', 
+                        'c_pop_perc_migration', 'c_gini_index', 
+                        'c_perc_owner_occupied_house',  'total2020_voted', 
+                        'turnout2020_registered']]
+
 
     participation_df.to_csv('../data/participation.csv')
 
