@@ -12,6 +12,7 @@ Author: Christian Jordan
 from census_data_collector import CensusQuery
 import pandas as pd
 import numpy as np
+import os
 
 
 def process_data():
@@ -22,6 +23,8 @@ def process_data():
     Output:
         Outputs processed csv file to the 'data' directory.
     '''
+    directory = os.getcwd()
+    print(directory)
     ## Data from Redistricting Data Hub (VTD-2020 level)
     # 2020 election turnout data
     turnout2020_df = pd.read_csv('data/MI_l2_turnout_stats_vtd20.csv',
