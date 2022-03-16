@@ -1,4 +1,4 @@
-from election_inspection import mi_election_inspection
+from mi_election_inspection import run_analysis
 
 if __name__ == '__main__':
-    mi_election_inspection.run()
+    run_analysis()

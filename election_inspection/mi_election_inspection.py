@@ -1,9 +1,8 @@
 import argparse 
-from scripts import estimation, get_geogson, import_data, match_vtd_to_districts
+from data_cleaning.import_data import process_data
+#from stat_analysis import ...
+#from visual_analysis import ...
 
-def main():
-    pass
+def run_analysis():
+    i = input('input:')
 
-
-if __name__ == '__main__':
-    main() 
