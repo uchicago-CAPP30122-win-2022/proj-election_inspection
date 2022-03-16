@@ -9,10 +9,9 @@ estimation.
 Author: Christian Jordan
 '''
 
-from census_data_collector import CensusQuery
+from data_cleaning.census_data_collector import CensusQuery
 import pandas as pd
 import numpy as np
-import os
 
 
 def process_data():
@@ -23,11 +22,10 @@ def process_data():
     Output:
         Outputs processed csv file to the 'data' directory.
     '''
-    directory = os.getcwd()
-    print(directory)
+
     ## Data from Redistricting Data Hub (VTD-2020 level)
     # 2020 election turnout data
-    turnout2020_df = pd.read_csv('data/MI_l2_turnout_stats_vtd20.csv',
+    turnout2020_df = pd.read_csv('election_inspection/data_cleaning/data/MI_l2_turnout_stats_vtd20.csv',
                                      header=0)
     turnout2020_df = turnout2020_df.loc[:, ['vtd_geoid20', 'g20201103_reg_all',
                                                         'g20201103_voted_all']]
@@ -44,7 +42,7 @@ def process_data():
     turnout2020_df = turnout2020_df.drop(['g20201103_reg_all'], axis=1)
 
     # Lagged 2018 election data (voter turnout in 2018 midterms)
-    lagged_2018_elections_df = pd.read_csv('data/'
+    lagged_2018_elections_df = pd.read_csv('election_inspection/data_cleaning/data/'
                                             'mi_2018_2020_vtd.csv', header=0)
     lagged_2018_elections_df = lagged_2018_elections_df.loc[:, ['GEOID20',
                                     'G18GOVRSCH', 'G18GOVDWHI', 'G18GOVLGEL', 
@@ -75,7 +73,8 @@ def process_data():
                             for _, row in lagged_2018_elections_df.iterrows()]
 
     # Ethnic groupings data (percentage of ethnic groupings)
-    race_census_df = pd.read_csv('data/mi_pl2020_vtd.csv', header=0)
+    race_census_df = pd.read_csv(
+            'election_inspection/data_cleaning/data/mi_pl2020_vtd.csv', header=0)
     race_census_df = race_census_df.loc[:, ['GEOID20', 'COUNTY', 'VTD', 'POP100',
                                             'P0010002', 'P0010003', 'P0010004', 
                                             'P0010005', 'P0010006', 'P0010007', 
@@ -107,7 +106,7 @@ def process_data():
     home_ownership_census_df = HomeOwnershipQuery.retrieve_data(
                     2019, 'acs/acs5', ['B25001_001E', 'B25003_002E'], 'county', 
                     'owner occupied housing')
-    if not home_ownership_census_df:
+    if home_ownership_census_df is None:
         home_ownership_census_df = HomeOwnershipQuery.retry_retrieval()
     # Clean data
     home_ownership_census_df = home_ownership_census_df.astype('int')
@@ -121,16 +120,16 @@ def process_data():
     Pop2019Query = CensusQuery()
     pop_2019_census_df = Pop2019Query.retrieve_data(2019, 'acs/acs5', 
                                 ['B01003_001E'], 'county', '2019 population')
-    if not pop_2019_census_df:
+    if pop_2019_census_df is None:
         pop_2019_census_df = Pop2019Query.retry_retrieval()
     Pop2018Query = CensusQuery()
     pop_2018_census_df = Pop2018Query.retrieve_data(2018, 'acs/acs5', 
                                 ['B01003_001E'], 'county', '2018 population')
-    if not pop_2018_census_df:
+    if pop_2018_census_df is None:
         pop_2018_census_df = Pop2018Query.retry_retrieval()
     # Clean data
     growth_census_df = pop_2019_census_df.merge(
-                pop_2018_census_df, on='county', suffixes={'_2019', '_2018'})
+                pop_2018_census_df, on='county', suffixes=('_2019', '_2018'))
     growth_census_df = growth_census_df.astype('int')
     growth_census_df['c_pop_perc_change'] = (
                             (growth_census_df['B01003_001E_2019'] - 
@@ -145,7 +144,7 @@ def process_data():
     urban_pop_census_df = UrbanPopQuery.retrieve_data(2020, 'pdb/statecounty', 
                 ['Tot_Population_CEN_2010', 'URBANIZED_AREA_POP_CEN_2010'], 
                 'county', 'urban population')
-    if not urban_pop_census_df:
+    if urban_pop_census_df is None:
         urban_pop_census_df = UrbanPopQuery.retry_retrieval()
     # Clean data
     urban_pop_census_df = urban_pop_census_df.astype('int')
@@ -161,7 +160,7 @@ def process_data():
     MigrationQuery = CensusQuery()
     migration_census_df = MigrationQuery.retrieve_data(2019, 'acs/flows', 
                             ['MOVEDIN', 'MOVEDOUT'], 'county', 'migration')
-    if not migration_census_df:
+    if migration_census_df is None:
         migration_census_df = MigrationQuery.retry_retrieval()
     # Clean data
     migration_census_df = migration_census_df.fillna(0)
@@ -178,7 +177,7 @@ def process_data():
     GiniIndexQuery = CensusQuery()
     gini_census_df = GiniIndexQuery.retrieve_data(2019, 'acs/acs5', 
                                     ['B19083_001E'], 'county', 'gini index')
-    if not gini_census_df:
+    if gini_census_df is None:
         gini_census_df = GiniIndexQuery.retry_retrieval()
     # Clean data
     gini_census_df.county = gini_census_df.county.astype('int')
@@ -190,7 +189,7 @@ def process_data():
                                 'B15003_017E', 'B15003_022E', 'B15003_023E', 
                                 'B15003_024E', 'B15003_025E'], 'county', 
                                 'education')
-    if not edu_census_df:
+    if edu_census_df is None:
         edu_census_df = EduQuery.retry_retrieval()
     # Clean data
     edu_census_df = edu_census_df.astype('int')
@@ -218,8 +217,7 @@ def process_data():
     ## Merging of datasets
     participation_df = (turnout2020_df
                     .merge(race_census_df, how='left', on='GEOID20')
-                    .merge(lagged_2018_elections_df, how='left', on='GEOID20')
-                    .merge(election2020_closeness_df, how='left', on='GEOID20'))
+                    .merge(lagged_2018_elections_df, how='left', on='GEOID20'))
     participation_df['county'] = [int(vtd_to_county_map[geoid]) 
                                         for geoid in participation_df['GEOID20']]
     participation_df = (participation_df
@@ -281,7 +279,8 @@ def process_data():
                         'total2020_voted', 'turnout2020_registered']]
 
 
-    participation_df.to_csv('participation_dataset.csv', mode='x', index=False)
+    participation_df.to_csv(
+        'election_inspection/data_cleaning/participation_dataset.csv', mode='x', index=False)
 
 
 if __name__ == '__main__':

@@ -61,8 +61,8 @@ def csv_joined_files(map_json, vtd_gdf, filename):
     join_gdf = vtd_gdf.sjoin(map_gdf, how = "left")
     remove = join_gdf['GEOID20'].str.contains('Z')
     join_gdf = join_gdf[ ~remove]
-    join_gdf['GEOID20'] = join_gdf['GEOID20'].astype('int')
-    join_gdf['DISTRICT'] = join_gdf['DISTRICT'].astype('int')
+    join_gdf['GEOID20'] = join_gdf['GEOID20'].astype('int64')
+    join_gdf['DISTRICT'] = join_gdf['DISTRICT'].astype('int64')
     keep = ['GEOID20', 'DISTRICT']
     join_gdf.drop('geometry', axis = 1).to_csv(filename,
                                                 columns = keep,
