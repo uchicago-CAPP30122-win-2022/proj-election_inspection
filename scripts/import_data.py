@@ -229,7 +229,7 @@ def process_data():
                                     for county in gini_census_df['county_name']]
     gini_census_df = gini_census_df.drop(['county_name'], axis=1)
 
-    # Education data (percent of population that falls within certain 
+    # Education data (percent of county population that falls within certain 
     # educational levels)
     edu_census_df = pd.read_csv(
                         '.../data/csv/ACSST5Y2019.S1501-2022-03-16T014444.csv',
