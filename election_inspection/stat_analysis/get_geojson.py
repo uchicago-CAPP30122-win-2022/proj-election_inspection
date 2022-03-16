@@ -20,7 +20,7 @@ lange_json = 'visual_analysis/lange/Lange Congressional.json'
 szetela_json = 'visual_analysis/szetela/szetela.json'
 
 map_names = ['apple', 'birch', 'chestnut', 'lange', 'szetela']
-keep_cols = ['DISTRICT']
+keep_cols = ['DISTRICT', 'c_gini_index', 'c_perc_hs_grad'
 
 for map_name in map_names:
     input_csv = 'stat_analysis/' + map_name + '_results.csv'
