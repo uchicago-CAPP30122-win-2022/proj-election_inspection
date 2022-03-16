@@ -33,10 +33,42 @@ def process_data():
     turnout2020_df['turnout2020_registered'] = (
                                     turnout2020_df['total2020_voted'] /
                                     turnout2020_df['g20201103_reg_all'])
-    turnout2020_df = turnout2020_df.drop(['g20201103_reg_all'], axis=1)
     missing_obs = [geoid[-1] != 'Z' for geoid in turnout2020_df['GEOID20']]
     turnout2020_df = turnout2020_df[missing_obs]
     turnout2020_df['GEOID20'] = turnout2020_df['GEOID20'].astype('int64')
+    vtd_registered_voters_dict = {row[0]: row[1] 
+                                    for _, row in turnout2020_df.iterrows()}
+    turnout2020_df = turnout2020_df.drop(['g20201103_reg_all'], axis=1)
+
+    # Lagged 2018 election data (voter turnout in 2018 midterms)
+    lagged_2018_elections_df = pd.read_csv('../data/csv/'
+                                            'mi_2018_2020_vtd.csv', header=0)
+    lagged_2018_elections_df = lagged_2018_elections_df.loc[:, ['GEOID20',
+                                    'G18GOVRSCH', 'G18GOVDWHI', 'G18GOVLGEL', 
+                                    'G18GOVTSCH', 'G18GOVGKUR', 'G18GOVNBUT']]
+    # Turnout in 2018 calculated by summing votes in gubernatorial race
+    lagged_2018_elections_df['turnout2018'] = (
+                                        lagged_2018_elections_df['G18GOVRSCH']
+                                        + lagged_2018_elections_df['G18GOVDWHI']
+                                        + lagged_2018_elections_df['G18GOVLGEL']
+                                        + lagged_2018_elections_df['G18GOVTSCH']
+                                        + lagged_2018_elections_df['G18GOVGKUR']
+                                        + lagged_2018_elections_df['G18GOVNBUT'])
+    lagged_2018_elections_df = lagged_2018_elections_df.drop(['G18GOVRSCH',
+                                    'G18GOVDWHI', 'G18GOVLGEL', 'G18GOVTSCH',
+                                    'G18GOVGKUR', 'G18GOVNBUT'], axis=1)
+    missing_obs = [geoid[-1] != 'Z' for geoid 
+                        in lagged_2018_elections_df['GEOID20']]
+    lagged_2018_elections_df = lagged_2018_elections_df[missing_obs]
+    lagged_2018_elections_df['GEOID20'] = (lagged_2018_elections_df['GEOID20']
+                                                            .astype('int64'))
+    lagged_2018_elections_df['turnout2018_registered'] = [row[1] / 
+                            vtd_registered_voters_dict[row[0]] 
+                            if vtd_registered_voters_dict.get(row[0]) else np.nan
+                            for _, row in lagged_2018_elections_df.iterrows()]
+    lagged_2018_elections_df = lagged_2018_elections_df.drop(
+                                                    ['turnout2018'], axis=1)
+
 
     # Ethnic groupings data (percentage of ethnic groupings)
     race_census_df = pd.read_csv('../data/csv/mi_pl2020_vtd.csv', header=0)
@@ -63,29 +95,6 @@ def process_data():
     missing_obs = [geoid[-1] != 'Z' for geoid in race_census_df['GEOID20']]
     race_census_df = race_census_df[missing_obs]
     race_census_df['GEOID20'] = race_census_df['GEOID20'].astype('int64')
-
-    # Lagged election data (voter turnout in 2018 midterms)
-    lagged_2018_elections_df = pd.read_csv('../data/csv/'
-                                            'mi_2018_2020_vtd.csv', header=0)
-    lagged_2018_elections_df = lagged_2018_elections_df.loc[:, ['GEOID20',
-                                    'G18GOVRSCH', 'G18GOVDWHI', 'G18GOVLGEL', 
-                                    'G18GOVTSCH', 'G18GOVGKUR', 'G18GOVNBUT']]
-    # Turnout in 2018 calculated by summing votes in gubernatorial race
-    lagged_2018_elections_df['turnout2018'] = (
-                                        lagged_2018_elections_df['G18GOVRSCH']
-                                        + lagged_2018_elections_df['G18GOVDWHI']
-                                        + lagged_2018_elections_df['G18GOVLGEL']
-                                        + lagged_2018_elections_df['G18GOVTSCH']
-                                        + lagged_2018_elections_df['G18GOVGKUR']
-                                        + lagged_2018_elections_df['G18GOVNBUT'])
-    lagged_2018_elections_df = lagged_2018_elections_df.drop(['G18GOVRSCH',
-                                    'G18GOVDWHI', 'G18GOVLGEL', 'G18GOVTSCH',
-                                    'G18GOVGKUR', 'G18GOVNBUT'], axis=1)
-    missing_obs = [geoid[-1] != 'Z' for geoid 
-                        in lagged_2018_elections_df['GEOID20']]
-    lagged_2018_elections_df = lagged_2018_elections_df[missing_obs]
-    lagged_2018_elections_df['GEOID20'] = (lagged_2018_elections_df['GEOID20']
-                                                                .astype('int64'))
 
     # 2020 presidential election race closeness data 
     election2020_closeness_df = pd.read_csv('../data/csv/mi_2020_2020_vtd.csv',
@@ -292,7 +301,7 @@ def process_data():
     participation_df = participation_df.rename(columns=
                                                 {'county_code': 'COUNTY_FIPS'})
     participation_df = participation_df[['GEOID20', 'VTD', 'COUNTY_FIPS', 
-                        'total_pop', 'total_pop_log', 'turnout2018', 
+                        'total_pop', 'total_pop_log', 'turnout2018_registered', 
                         '2020_vote_share_diff', 'pop_perc_one_race', 
                         'pop_perc_two_races', 'pop_perc_three_or_more_races', 
                         'pop_perc_white', 'pop_perc_black', 'pop_perc_am_indian', 
