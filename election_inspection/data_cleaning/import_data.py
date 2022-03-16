@@ -66,8 +66,7 @@ def process_data():
                             vtd_registered_voters_dict[row[0]] 
                             if vtd_registered_voters_dict.get(row[0]) else np.nan
                             for _, row in lagged_2018_elections_df.iterrows()]
-    lagged_2018_elections_df = lagged_2018_elections_df.drop(
-                                                    ['turnout2018'], axis=1)
+
 
     # Ethnic groupings data (percentage of ethnic groupings)
     race_census_df = pd.read_csv('data/mi_pl2020_vtd.csv', header=0)
@@ -209,7 +208,9 @@ def process_data():
                                         edu_census_df['B15003_024E'] +
                                         edu_census_df['B15003_025E']) /
                                         edu_census_df['B15003_001E'])
-    edu_census_df = edu_census_df.drop(['B15003_001E', 'B15003_017E', 
+    edu_census_df = edu_census_df.rename(
+                            columns={'B15003_017E': 'c_tot_hs_grad'})
+    edu_census_df = edu_census_df.drop(['B15003_001E', 
                                         'B15003_022E', 'B15003_023E', 
                                         'B15003_024E', 'B15003_025E'],
                                         axis=1)
@@ -265,17 +266,15 @@ def process_data():
     participation_df['pop_perc_pac_islander'] = (
                                     participation_df['pop_pac_islander_alone'] /
                                     participation_df['total_pop'])
-    participation_df = participation_df.drop(['gross_county_migration',
-                    'pop_one_race', 'pop_two_races', 'pop_three_or_more_races',
-                    'pop_white_alone', 'pop_black_alone', 'pop_am_indian_alone',
-                    'pop_asian_alone', 'pop_pac_islander_alone', 'c_total_pop'],
-                     axis=1)
+    participation_df = participation_df.drop(['VTD', 'COUNTY_FIPS', 
+                    'gross_county_migration', 'pop_one_race', 'pop_two_races', 
+                    'pop_three_or_more_races', , 
+                    'pop_black_alone', 'pop_am_indian_alone', 'pop_asian_alone', 
+                    'pop_pac_islander_alone', 'c_total_pop'], axis=1)
 
 
     ## Reordering of dataframe
-    participation_df = participation_df.rename(columns=
-                                                {'county': 'COUNTY_FIPS'})
-    participation_df = participation_df[['GEOID20', 'VTD', 'COUNTY_FIPS', 
+    participation_df = participation_df[['GEOID20',  
                         'total_pop', 'total_pop_log', 'turnout2018_registered', 
                         '2020_vote_share_diff', 'pop_perc_one_race', 
                         'pop_perc_two_races', 'pop_perc_three_or_more_races', 
@@ -284,7 +283,8 @@ def process_data():
                         'c_pop_pct_urban', 'c_pop_perc_change', 
                         'c_pop_perc_migration', 'c_gini_index', 'c_perc_hs_grad',
                         'c_perc_uni_grad', 'c_perc_owner_occupied_house',  
-                        'total2020_voted', 'turnout2020_registered']]
+                        'total2020_voted', 'turnout2020_registered', 
+                        'pop_white_alone',]]
 
 
     participation_df.to_csv('../data/participation.csv')
