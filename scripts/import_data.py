@@ -22,7 +22,7 @@ def process_data():
     Output:
         Outputs processed csv file to the 'data' directory.
     '''
-    # Data from Redistricting Data Hub (VTD-2020 level)
+    ## Data from Redistricting Data Hub (VTD-2020 level)
     # 2020 election turnout data
     turnout2020_df = pd.read_csv('../data/csv/MI_l2_turnout_stats_vtd20.csv',
                                      header=0)
@@ -103,7 +103,7 @@ def process_data():
                                                                 .astype('int64'))
 
 
-    # Data from Census Bureau (County level)
+    ## Data from Census Bureau (County level)
     # Migration data
     migration_census_df = pd.read_excel('../data/csv/county-to-county-2015-2019-'
                                         'ins-outs-nets-gross.xlsx',
@@ -121,14 +121,14 @@ def process_data():
                                         county).strip() for county in
                                         migration_census_df['county_name']]
     
-    # Create a 'county name' to 'county code' mapping for use below
+    # Create a 'county name' to 'county_code' mapping for use below
     county_name_to_code = {row[1]: row[0] for _, row in 
                                             migration_census_df.iterrows()}
     migration_census_df = migration_census_df.drop(['county_name'], axis=1)
     migration_census_df = migration_census_df.groupby('county_code').sum()
     migration_census_df = migration_census_df.reset_index()
 
-    # Create a census tract to county mapping for use below
+    # Create a census tract to 'county_code' mapping for use below
     tract_to_county_df = pd.read_csv('../data/csv/mi_pl2020_t.csv', header=0)
     tract_to_county_df = tract_to_county_df.loc[:, ['GEOID', 'COUNTY']]
     tract_to_county_dict = {row[0]: row[1] for _, row in 
@@ -221,13 +221,13 @@ def process_data():
     gini_census_df = gini_census_df.drop(['county_name'], axis=1)
 
 
-    # VTD to County FIPS code mapping
+    ## VTD to County FIPS code mapping
     vtd_to_county_map = {row[0]: row[1] for _, row in 
                                                 race_census_df.iterrows()}
     race_census_df = race_census_df.drop(['COUNTY'], axis=1)
 
     
-    # Merging of datasets
+    ## Merging of datasets
     participation_df = (turnout2020_df
                     .merge(race_census_df, how='left', on='GEOID20')
                     .merge(lagged_2018_elections_df, how='left', on='GEOID20')
@@ -241,7 +241,8 @@ def process_data():
                     .merge(home_ownership_census_df, how='left', on='county_code')
                     .merge(gini_census_df, how='left', on='county_code'))
 
-    # Aggregate VTD population for each county in dictionary
+
+    ## Aggregate VTD population for each county in dictionary
     c_pop_df = participation_df.loc[:, ['county_code', 'total_pop']]
     c_pop_df = c_pop_df.groupby(['county_code']).sum()
     c_pop_df = c_pop_df.reset_index()
@@ -250,7 +251,8 @@ def process_data():
     participation_df['c_total_pop'] = [c_pop_dict[cc] 
                                 for cc in participation_df['county_code']]
     
-    # Final feature calculations
+
+    ## Final features calculations (make population totals percentages)
     participation_df['c_pop_perc_migration'] = (
                                     participation_df['gross_county_migration'] /
                                     participation_df['c_total_pop'])
@@ -285,7 +287,7 @@ def process_data():
                      axis=1)
 
 
-    # Reordering of dataframe
+    ## Reordering of dataframe
     participation_df = participation_df.rename(columns=
                                                 {'county_code': 'COUNTY_FIPS'})
     participation_df = participation_df[['GEOID20', 'VTD', 'COUNTY_FIPS', 
