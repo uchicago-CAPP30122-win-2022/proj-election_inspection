@@ -24,7 +24,6 @@ szetela = pd.read_csv('data/csv/szetela_vtd_joined.csv')
 df.join(other.set_index('key'), on='key')
 clean.join(apple.set_index('GEOID20'), on = 'GEOID20')
 
-
 # Define the index position of the explanatory variables
 X_cols = list(range(5,22))
 
@@ -35,6 +34,12 @@ best_X_cols = estimation_util.forward_selection_AIC(clean, y_col, X_cols)
 X = estimation_util.get_X(clean, best_X_cols)
 y = estimation_util.get_y(clean, y_col)
 betas = estimation_util.regress(X, y)
+
+
+collapsed = df.groupby(['DISTRICT']).mean()
+X = estimation_util.get_X(collapsed, best_X_cols)
+collapsed['predicted_turnout'] = estimation_util.predict(betas, X)
+collapsed.to_csv(filename)
 
 
 # Define the filenames of the files for each map
