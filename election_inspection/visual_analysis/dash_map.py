@@ -141,6 +141,6 @@ def run_dash():
                     Website: {rep_dict['officials'][0]['urls'][0]} 
                     """
         return body_text
-
-if __name__ == '__main__':
-    app.run_server(debug=True)
+    
+    print('here')
+    app.run_server()

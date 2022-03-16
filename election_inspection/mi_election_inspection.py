@@ -1,10 +1,8 @@
-import argparse 
 from data_cleaning.import_data import process_data
 from stat_analysis.match_vtd_to_districts import run_matching
 from stat_analysis.estimation import run_estimation
 from stat_analysis.get_geojson import run_get_geojson
 from visual_analysis.dash_map import run_dash
-import os
 
 def run_analysis():
     '''
@@ -34,6 +32,5 @@ def run_analysis():
     input('Press any key to continue...')
 
     # Create visualization dashboard
+    print("Starting visualization dashboard.\n")
     run_dash()
-    print("Started visualization dashboard.\n")
-    input('Press any key to continue...')
