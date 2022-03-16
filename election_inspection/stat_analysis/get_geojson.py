@@ -43,7 +43,11 @@ for map_name in maps_dict:
         map_gdf = map_gdf.join(input_df.set_index('DISTRICT'), on = 'DISTRICT')
     map_gdf = map_gdf.rename(columns = {"pop_perc_white" : "PCT_WHITE",
                               "pop_perc_black" : "PCT_BLACK",
-                              "c_gini_index" : "GINI_INDEX",
+                              "c_gini_index" : "GINI_IDX",
                               "c_perc_hs_grad": "PCT_HS_GRAD",
                               "predicted_turnout" : "PREDICTED_TURNOUT"})
+    convert_cols = ['PCT_WHITE', 'PCT_BLACK', 'PCT_HS_GRAD', 'PREDICTED_TURNOUT']
+    for col in convert_cols:
+        map_gdf[col] = map_gdf[col] * 100
+        map_gdf[col] = map_gdf[col].round(2)
     map_gdf.to_file('election_inspection/visual_analysis/' + map_name + '.geojson', driver = 'GeoJSON')

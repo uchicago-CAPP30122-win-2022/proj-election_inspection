@@ -1,7 +1,6 @@
 import argparse 
 from data_cleaning.import_data import process_data
-from stat_analysis.match_vtd_to_districts import run_matching, csv_joined_files
-from visual_analysis.dash_map import
+from stat_analysis.match_vtd_to_districts import run_matching
 
 def run_analysis():
     '''
@@ -16,21 +15,21 @@ def run_analysis():
 
     # Run scripts to perform analysis
     run_matching()
-    print("Created mapping of vtds to new districts and output csvs to 'stat_analysis/' directory.\n")
+    print("Created mapping of vtds to new districts and output csvs to "
+                                    "'stat_analysis/' directory.\n")
     input('Press any key to continue...')
 
-    exec('/stat_analysis/estimation.py')
-    print("Created mapping of vtds to new districts and output csvs to 'stat_analysis/' directory.\n")
+    exec('stat_analysis/estimation.py')
+    print("Created mapping of vtds to new districts and output csvs to"
+                                    "'stat_analysis/' directory.\n")
     input('Press any key to continue...')
 
-    exec('/stat_analysis/get_geojson.py')
-    print("Created mapping of vtds to new districts and output csvs to 'stat_analysis/' directory.\n")
+    exec('stat_analysis/get_geojson.py')
+    print("Created geojsons of the estimation results for proposed districts"
+                                    "in the 'visual_analysis/' directory.\n")
     input('Press any key to continue...')
 
-    # Create visual 
-
-
-
-
-
-
+    # Create visualization dashboard
+    exec('visual_analysis/dash_map.py')
+    print("Started visualization dashboard.\n")
+    input('Press any key to continue...')
