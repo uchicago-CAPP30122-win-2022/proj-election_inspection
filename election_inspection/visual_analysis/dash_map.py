@@ -8,7 +8,7 @@ import json
 import requests
 from dash.exceptions import PreventUpdate
 
-district_data = gpd.read_file("birch.geojson") #initial map
+district_data = gpd.read_file("election_inspection/visual_analysis/birch.geojson") #initial map
 red_district_data = district_data.iloc[:,2:8] #initial table
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.JOURNAL])
@@ -70,7 +70,7 @@ app.layout = html.Div([
             [dash.dependencies.Input('map_version', 'value')],
             [dash.dependencies.Input('checkbox', 'value')])
 def recreate_map(attr, map, show_vtd):
-    district_data = gpd.read_file(f"{map}.geojson") #file path to new map
+    district_data = gpd.read_file(f"election_inspection/visual_analysis/{map}.geojson") #file path to new map
     m = fl.Map(location=[44.6, -84.563], 
                zoom_start=6,
                min_zoom = 6, 
@@ -98,7 +98,7 @@ def recreate_map(attr, map, show_vtd):
     geojson.add_to(m)
 
     if show_vtd:
-        choro_data = gpd.read_file(f"vtd.geojson") #VTD File
+        choro_data = gpd.read_file(f"election_inspection/visual_analysis/vtd.geojson") #VTD File
         key_var = 'GEOID20'
     else:
         choro_data = district_data
@@ -112,12 +112,12 @@ def recreate_map(attr, map, show_vtd):
     choro.add_to(m)
     m.keep_in_front(geojson)
     m.save('district_map.html')
-    return open('district_map.html', 'r').read()
+    return open('election_inspection/visual_analysis/district_map.html', 'r').read()
 
 @app.callback(dash.dependencies.Output('tbl', 'data'), 
             [dash.dependencies.Input('map_version', 'value')])
 def recreate_table(map):
-    district_data = gpd.read_file(f"{map}.geojson") #path to new map file
+    district_data = gpd.read_file(f"election_inspection/visual_analysis/{map}.geojson") #path to new map file
     red_district_data = district_data.iloc[:,2:8]
     return red_district_data.to_dict('records')
 
