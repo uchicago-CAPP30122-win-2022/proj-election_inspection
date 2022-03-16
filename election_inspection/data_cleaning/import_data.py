@@ -9,10 +9,9 @@ estimation.
 Author: Christian Jordan
 '''
 
-from census_api_caller import get_census_data
+from census_data_collector import CensusQuery
 import pandas as pd
 import numpy as np
-import re
 
 
 def process_data():
@@ -25,7 +24,7 @@ def process_data():
     '''
     ## Data from Redistricting Data Hub (VTD-2020 level)
     # 2020 election turnout data
-    turnout2020_df = pd.read_csv('../data/csv/MI_l2_turnout_stats_vtd20.csv',
+    turnout2020_df = pd.read_csv('data/MI_l2_turnout_stats_vtd20.csv',
                                      header=0)
     turnout2020_df = turnout2020_df.loc[:, ['vtd_geoid20', 'g20201103_reg_all',
                                                         'g20201103_voted_all']]
@@ -42,7 +41,7 @@ def process_data():
     turnout2020_df = turnout2020_df.drop(['g20201103_reg_all'], axis=1)
 
     # Lagged 2018 election data (voter turnout in 2018 midterms)
-    lagged_2018_elections_df = pd.read_csv('../data/csv/'
+    lagged_2018_elections_df = pd.read_csv('data/'
                                             'mi_2018_2020_vtd.csv', header=0)
     lagged_2018_elections_df = lagged_2018_elections_df.loc[:, ['GEOID20',
                                     'G18GOVRSCH', 'G18GOVDWHI', 'G18GOVLGEL', 
@@ -71,7 +70,7 @@ def process_data():
                                                     ['turnout2018'], axis=1)
 
     # Ethnic groupings data (percentage of ethnic groupings)
-    race_census_df = pd.read_csv('../data/csv/mi_pl2020_vtd.csv', header=0)
+    race_census_df = pd.read_csv('data/mi_pl2020_vtd.csv', header=0)
     race_census_df = race_census_df.loc[:, ['GEOID20', 'COUNTY', 'VTD', 'POP100',
                                             'P0010002', 'P0010003', 'P0010004', 
                                             'P0010005', 'P0010006', 'P0010007', 
@@ -97,14 +96,14 @@ def process_data():
     race_census_df['GEOID20'] = race_census_df['GEOID20'].astype('int64')
 
     # 2020 presidential election race closeness data 
-    election2020_closeness_df = pd.read_csv('../data/csv/mi_2020_2020_vtd.csv',
+    election2020_closeness_df = pd.read_csv('data/mi_2020_2020_vtd.csv',
                                                                     header=0)
     # Election closeness calculated by taking difference of top two candidates
     election2020_closeness_df['2020_vote_share_diff'] = abs(
-        election2020_closeness_df['G20PRERTRU']
-        - election2020_closeness_df['G20PREDBID'])
+                                    election2020_closeness_df['G20PRERTRU'] - 
+                                    election2020_closeness_df['G20PREDBID'])
     election2020_closeness_df = election2020_closeness_df.loc[:,
-                                ['GEOID20', '2020_vote_share_diff']]
+                                        ['GEOID20', '2020_vote_share_diff']]
     missing_obs = [geoid[-1] != 'Z' for geoid in 
                                         election2020_closeness_df['GEOID20']]
     election2020_closeness_df = election2020_closeness_df[missing_obs]
@@ -114,8 +113,13 @@ def process_data():
 
     ## 2019 Data from Census Bureau (County level data)
     # Home ownership data (percent of owner occupied of total housing units)
-    home_ownership_census_df = get_census_data(2019, 'acs/acs5', ['B25001_001E',
-                            'B25003_002E'], 'county', 'owner occupied housing')
+    HomeOwnershipQuery = CensusQuery()
+    home_ownership_census_df = HomeOwnershipQuery.retrieve_data(
+                    2019, 'acs/acs5', ['B25001_001E', 'B25003_002E'], 'county', 
+                    'owner occupied housing')
+    if not home_ownership_census_df:
+        home_ownership_census_df = HomeOwnershipQuery.retry_retrieval()
+    # Clean data
     home_ownership_census_df = home_ownership_census_df.astype('int')
     home_ownership_census_df['c_perc_owner_occupied_house'] = (
                                     home_ownership_census_df['B25003_002E'] / 
@@ -124,10 +128,17 @@ def process_data():
                                                     'B25001_001E'], axis=1)
 
     # Population growth data (rate of change from 2018 to 2019)
-    pop_2019_census_df = get_census_data(2019, 'acs/acs5', ['B01003_001E'], 
-                                                    'county', '2019 population')
-    pop_2018_census_df = get_census_data(2018, 'acs/acs5', ['B01003_001E'], 
-                                                    'county', '2018 population')
+    Pop2019Query = CensusQuery()
+    pop_2019_census_df = Pop2019Query.retrieve_data(2019, 'acs/acs5', 
+                                ['B01003_001E'], 'county', '2019 population')
+    if not pop_2019_census_df:
+        pop_2019_census_df = Pop2019Query.retry_retrieval()
+    Pop2018Query = CensusQuery()
+    pop_2018_census_df = Pop2018Query.retrieve_data(2018, 'acs/acs5', 
+                                ['B01003_001E'], 'county', '2018 population')
+    if not pop_2018_census_df:
+        pop_2018_census_df = Pop2018Query.retry_retrieval()
+    # Clean data
     growth_census_df = pop_2019_census_df.merge(
                 pop_2018_census_df, on='county', suffixes={'_2019', '_2018'})
     growth_census_df = growth_census_df.astype('int')
@@ -140,9 +151,13 @@ def process_data():
     growth_census_df = growth_census_df.drop(['B01003_001E_2018'], axis=1)
 
     # Urban population data (percent of population living in an urban area)
-    urban_pop_census_df = get_census_data(2020, 'pdb/statecounty', 
+    UrbanPopQuery = CensusQuery()
+    urban_pop_census_df = UrbanPopQuery.retrieve_data(2020, 'pdb/statecounty', 
                 ['Tot_Population_CEN_2010', 'URBANIZED_AREA_POP_CEN_2010'], 
                 'county', 'urban population')
+    if not urban_pop_census_df:
+        urban_pop_census_df = UrbanPopQuery.retry_retrieval()
+    # Clean data
     urban_pop_census_df = urban_pop_census_df.astype('int')
     urban_pop_census_df['c_pop_pct_urban'] = (
                         urban_pop_census_df['URBANIZED_AREA_POP_CEN_2010'] /
@@ -151,8 +166,12 @@ def process_data():
                                     'Tot_Population_CEN_2010'], axis=1)
     
     # Migration data (population that moved in or moved out of county)
-    migration_census_df = get_census_data(2019, 'acs/flows', ['MOVEDIN', 
-                                        'MOVEDOUT'], 'county', 'migration')
+    MigrationQuery = CensusQuery()
+    migration_census_df = MigrationQuery.retrieve_data(2019, 'acs/flows', 
+                            ['MOVEDIN', 'MOVEDOUT'], 'county', 'migration')
+    if not migration_census_df:
+        migration_census_df = MigrationQuery.retry_retrieval()
+    # Clean data
     migration_census_df = migration_census_df.fillna(0)
     migration_census_df = migration_census_df.astype('int')
     migration_census_df['gross_county_migration'] = (
@@ -164,16 +183,24 @@ def process_data():
     migration_census_df = migration_census_df.reindex()
 
     # Income inequality data (gini index per county)
-    gini_census_df = get_census_data(2019, 'acs/acs5', ['B19083_001E'], 
-                                                        'county', 'gini index')
+    GiniIndexQuery = CensusQuery()
+    gini_census_df = GiniIndexQuery.retrieve_data(2019, 'acs/acs5', 
+                                    ['B19083_001E'], 'county', 'gini index')
+    if not gini_census_df:
+        gini_census_df = GiniIndexQuery.retry_retrieval()
+    # Clean data
     gini_census_df.county = gini_census_df.county.astype('int')
     gini_census_df = gini_census_df.rename(columns={'B19083_001E': 'c_gini_index'})  
 
     # Education data (population that falls within certain educational levels)
-    edu_census_df = get_census_data(2019, 'acs/acs5', ['B15003_001E', 
+    EduQuery = CensusQuery()
+    edu_census_df = EduQuery.retrieve_data(2019, 'acs/acs5', ['B15003_001E', 
                                 'B15003_017E', 'B15003_022E', 'B15003_023E', 
                                 'B15003_024E', 'B15003_025E'], 'county', 
                                 'education')
+    if not edu_census_df:
+        edu_census_df = EduQuery.retry_retrieval()
+    # Clean data
     edu_census_df = edu_census_df.astype('int')
     edu_census_df['c_perc_hs_grad'] = (edu_census_df['B15003_017E'] /
                                         edu_census_df['B15003_001E'])
