@@ -8,8 +8,8 @@ import json
 import requests
 from dash.exceptions import PreventUpdate
 
-district_data = gpd.read_file("sample_maps/sample1") #initial map
-red_district_data = district_data.iloc[:,3:9] #initial table
+district_data = gpd.read_file("birch.geojson") #initial map
+red_district_data = district_data.iloc[:,2:8] #initial table
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.JOURNAL])
 app.layout = html.Div([
@@ -21,15 +21,15 @@ app.layout = html.Div([
                             style={'font-weight': 'bold', "text-align": "center"}), 
                             width=1),
                     dbc.Col(dcc.Dropdown(id='map_version', 
-                                        options=['1', '2'],\
-                                        value = '1'), 
-                            width=1),
+                                        options=['apple', 'birch', 'chestnut', 'lange', 'szetela'],\
+                                        value = 'birch'), 
+                            width=2),
                     dbc.Col(html.Label(['District Statistics:'], 
                                         style={'font-weight': 'bold', "text-align": "center"}), 
                             width=1),
                     dbc.Col(dcc.Dropdown(id='stats', 
-                                        options=[{'label': i, 'value': i} for i in red_district_data.columns], #initial file columns
-                                        value = 'pop_18over', 
+                                        options=[{'label': i, 'value': i} for i in red_district_data.columns], 
+                                        value = 'PREDICTED_TURNOUT', 
                                         placeholder='Filter by demographic stats...'), 
                             width=4),
                     dbc.Col(html.Label(['Reveal VTDs?'], 
@@ -43,7 +43,7 @@ app.layout = html.Div([
                     align='center'),
                 dbc.Row([
                     dbc.Col(html.Iframe(id = 'map', 
-                                        srcDoc = open('district_map.html', 'r').read(), 
+                                        srcDoc = None, 
                                         height=500, 
                                         width='100%'), 
                             width=8),
@@ -70,13 +70,13 @@ app.layout = html.Div([
             [dash.dependencies.Input('map_version', 'value')],
             [dash.dependencies.Input('checkbox', 'value')])
 def recreate_map(attr, map, show_vtd):
-    district_data = gpd.read_file(f"sample_maps/sample{map}") #file path to new map
-    m = fl.Map(location=[42.36, -83.0458], 
-               zoom_start=11.3,
-               min_zoom = 8, 
+    district_data = gpd.read_file(f"{map}.geojson") #file path to new map
+    m = fl.Map(location=[44.6, -84.563], 
+               zoom_start=6,
+               min_zoom = 6, 
                max_zoom = 15
                )
-    district_tt = fl.GeoJsonTooltip(fields=['DistrictNu', attr], aliases=['District:', attr + ':'])
+    district_tt = fl.GeoJsonTooltip(fields=['DISTRICTN', attr], aliases=['District:', attr + ':'])
     style = {
         'color': 'black',
         'weight': 2,
@@ -98,14 +98,16 @@ def recreate_map(attr, map, show_vtd):
     geojson.add_to(m)
 
     if show_vtd:
-        choro_data = gpd.read_file(f"sample_maps/Proposed_NEZ_HOMESTEAD_2021.geojson") #VTD File
+        choro_data = gpd.read_file(f"vtd.geojson") #VTD File
+        key_var = 'GEOID20'
     else:
         choro_data = district_data
+        key_var = 'DISTRICTN'
     choro = fl.Choropleth(geo_data = choro_data, 
                     data = choro_data,
                     name="district choro", 
-                    columns = ['FID', attr],
-                    key_on = 'feature.properties.FID', 
+                    columns = [key_var, attr],
+                    key_on = f'feature.properties.{key_var}', 
                     legend_name = attr)
     choro.add_to(m)
     m.keep_in_front(geojson)
@@ -115,8 +117,8 @@ def recreate_map(attr, map, show_vtd):
 @app.callback(dash.dependencies.Output('tbl', 'data'), 
             [dash.dependencies.Input('map_version', 'value')])
 def recreate_table(map):
-    district_data = gpd.read_file(f"sample_maps/sample{map}") #path to new map file
-    red_district_data = district_data.iloc[:,3:9]
+    district_data = gpd.read_file(f"{map}.geojson") #path to new map file
+    red_district_data = district_data.iloc[:,2:8]
     return red_district_data.to_dict('records')
 
 @app.callback(dash.dependencies.Output('info', 'children'), 
@@ -125,12 +127,12 @@ def us_rep_info(dist_list):
     if not dist_list:
         raise PreventUpdate
     dist_idx = dist_list[0]
-    dist = red_district_data.iloc[dist_idx]['DistrictNu']
-    request_api = requests.get(f"""https://civicinfo.googleapis.com/civicinfo/v2/representatives/ocd-division%2Fcountry%3Aus%2Fstate%3Ami%2Fcd%3A{dist}?levels=country&roles=legislatorLowerBody&key=AIzaSyDfMv-vUFL7qBsn6zoGlh4K6K1nIiSwQho""")
+    dist = red_district_data.iloc[dist_idx]['DISTRICTN']
+    request_api = requests.get(f"""https://civicinfo.googleapis.com/civicinfo/v2/representatives/ocd-division%2Fcountry%3Aus%2Fstate%3Ami%2Fcd%3A{int(dist)}?levels=country&roles=legislatorLowerBody&key=AIzaSyDfMv-vUFL7qBsn6zoGlh4K6K1nIiSwQho""")
     rep_dict = json.loads(request_api.text)
     
     body_text = f"""
-                # {rep_dict['offices'][0]['name']} for {rep_dict['divisions'][f'ocd-division/country:us/state:mi/cd:{dist}']['name']}
+                # {rep_dict['offices'][0]['name']} for {rep_dict['divisions'][f'ocd-division/country:us/state:mi/cd:{int(dist)}']['name']}
                 ## {rep_dict['officials'][0]['name']}
                 ### Party: {rep_dict['officials'][0]['party']}
                 Address: {rep_dict['officials'][0]['address'][0]['line1']} {rep_dict['officials'][0]['address'][0]['city']}, {rep_dict['officials'][0]['address'][0]['state']} {rep_dict['officials'][0]['address'][0]['zip']} \n
