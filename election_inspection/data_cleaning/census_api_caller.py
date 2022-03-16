@@ -6,6 +6,7 @@ Christian Jordan, Alejandro Navarrete, Victor Perez
 Script to retrieve data about Michigan from the Census Bureau API.
 
 Author: Christian Jordan
+Citations: Python Requests documentation and https://bit.ly/3KPBA74
 '''
 import requests
 import pandas as pd
