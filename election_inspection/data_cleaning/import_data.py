@@ -47,13 +47,17 @@ def process_data():
                                     'G18GOVRSCH', 'G18GOVDWHI', 'G18GOVLGEL', 
                                     'G18GOVTSCH', 'G18GOVGKUR', 'G18GOVNBUT']]
     # Turnout in 2018 calculated by summing votes in gubernatorial race
-    lagged_2018_elections_df['turnout2018'] = (
+    lagged_2018_elections_df['tot_turnout2018'] = (
                                         lagged_2018_elections_df['G18GOVRSCH']
                                         + lagged_2018_elections_df['G18GOVDWHI']
                                         + lagged_2018_elections_df['G18GOVLGEL']
                                         + lagged_2018_elections_df['G18GOVTSCH']
                                         + lagged_2018_elections_df['G18GOVGKUR']
                                         + lagged_2018_elections_df['G18GOVNBUT'])
+    # Election closeness calculated by taking difference of top two candidates
+    lagged_2018_elections_df['election2018_closeness'] = (
+                                        lagged_2018_elections_df['G18GOVRSCH']
+                                        + lagged_2018_elections_df['G18GOVDWHI'])
     lagged_2018_elections_df = lagged_2018_elections_df.drop(['G18GOVRSCH',
                                     'G18GOVDWHI', 'G18GOVLGEL', 'G18GOVTSCH',
                                     'G18GOVGKUR', 'G18GOVNBUT'], axis=1)
@@ -66,7 +70,6 @@ def process_data():
                             vtd_registered_voters_dict[row[0]] 
                             if vtd_registered_voters_dict.get(row[0]) else np.nan
                             for _, row in lagged_2018_elections_df.iterrows()]
-
 
     # Ethnic groupings data (percentage of ethnic groupings)
     race_census_df = pd.read_csv('data/mi_pl2020_vtd.csv', header=0)
@@ -82,7 +85,7 @@ def process_data():
                                                 + race_census_df['P0010070'])
     race_census_df = race_census_df.rename(columns={'POP100': 'total_pop',
                                             'P0010002': 'pop_one_race',
-                                            'P0010003': 'pop_white_alone',
+                                            'P0010003': 'tot_pop_white',
                                             'P0010004': 'pop_black_alone',
                                             'P0010005': 'pop_am_indian_alone',
                                             'P0010006': 'pop_asian_alone',
@@ -93,21 +96,6 @@ def process_data():
     missing_obs = [geoid[-1] != 'Z' for geoid in race_census_df['GEOID20']]
     race_census_df = race_census_df[missing_obs]
     race_census_df['GEOID20'] = race_census_df['GEOID20'].astype('int64')
-
-    # Lagged 2018 presidential election race closeness data 
-    election2020_closeness_df = pd.read_csv('data/mi_2020_2020_vtd.csv',
-                                                                    header=0)
-    # Election closeness calculated by taking difference of top two candidates
-    election2020_closeness_df['2020_vote_share_diff'] = abs(
-                                    election2020_closeness_df['G20PRERTRU'] - 
-                                    election2020_closeness_df['G20PREDBID'])
-    election2020_closeness_df = election2020_closeness_df.loc[:,
-                                        ['GEOID20', '2020_vote_share_diff']]
-    missing_obs = [geoid[-1] != 'Z' for geoid in 
-                                        election2020_closeness_df['GEOID20']]
-    election2020_closeness_df = election2020_closeness_df[missing_obs]
-    election2020_closeness_df['GEOID20'] = (election2020_closeness_df['GEOID20']
-                                                                .astype('int64'))
 
 
     ## 2019 Data from Census Bureau (County level data)
@@ -158,11 +146,13 @@ def process_data():
         urban_pop_census_df = UrbanPopQuery.retry_retrieval()
     # Clean data
     urban_pop_census_df = urban_pop_census_df.astype('int')
-    urban_pop_census_df['c_pop_pct_urban'] = (
+    urban_pop_census_df['c_pop_perc_urban'] = (
                         urban_pop_census_df['URBANIZED_AREA_POP_CEN_2010'] /
                         urban_pop_census_df['Tot_Population_CEN_2010'])
-    urban_pop_census_df = urban_pop_census_df.drop(['URBANIZED_AREA_POP_CEN_2010',
-                                    'Tot_Population_CEN_2010'], axis=1)
+    urban_pop_census_df = urban_pop_census_df.rename(
+                        columns={'URBANIZED_AREA_POP_CEN_2010': 'c_tot_urban_pop'})
+    urban_pop_census_df = urban_pop_census_df.drop(
+                                        ['Tot_Population_CEN_2010'], axis=1)
     
     # Migration data (population that moved in or moved out of county)
     MigrationQuery = CensusQuery()
@@ -252,7 +242,7 @@ def process_data():
                                     participation_df['pop_three_or_more_races'] /
                                     participation_df['total_pop'])
     participation_df['pop_perc_white'] = (
-                                    participation_df['pop_white_alone'] /
+                                    participation_df['tot_pop_white'] /
                                     participation_df['total_pop'])
     participation_df['pop_perc_black'] = (
                                     participation_df['pop_black_alone'] /
@@ -266,28 +256,29 @@ def process_data():
     participation_df['pop_perc_pac_islander'] = (
                                     participation_df['pop_pac_islander_alone'] /
                                     participation_df['total_pop'])
-    participation_df = participation_df.drop(['VTD', 'COUNTY_FIPS', 
+    participation_df = participation_df.drop(['VTD', 'county', 
                     'gross_county_migration', 'pop_one_race', 'pop_two_races', 
-                    'pop_three_or_more_races', , 
-                    'pop_black_alone', 'pop_am_indian_alone', 'pop_asian_alone', 
-                    'pop_pac_islander_alone', 'c_total_pop'], axis=1)
+                    'pop_three_or_more_races', 'pop_black_alone', 
+                    'pop_am_indian_alone', 'pop_asian_alone', 
+                    'pop_pac_islander_alone', 'c_total_pop', 'tot_pop_white', 
+                    'tot_turnout2018', 'c_tot_hs_grad', 'c_tot_urban_pop'], 
+                    axis=1)
 
 
     ## Reordering of dataframe
     participation_df = participation_df[['GEOID20',  
                         'total_pop', 'total_pop_log', 'turnout2018_registered', 
-                        '2020_vote_share_diff', 'pop_perc_one_race', 
+                        'election2018_closeness', 'pop_perc_one_race', 
                         'pop_perc_two_races', 'pop_perc_three_or_more_races', 
                         'pop_perc_white', 'pop_perc_black', 'pop_perc_am_indian', 
                         'pop_perc_asian', 'pop_perc_pac_islander',  
-                        'c_pop_pct_urban', 'c_pop_perc_change', 
+                        'c_pop_perc_urban', 'c_pop_perc_change', 
                         'c_pop_perc_migration', 'c_gini_index', 'c_perc_hs_grad',
                         'c_perc_uni_grad', 'c_perc_owner_occupied_house',  
-                        'total2020_voted', 'turnout2020_registered', 
-                        'pop_white_alone',]]
+                        'total2020_voted', 'turnout2020_registered']]
 
 
-    participation_df.to_csv('../data/participation.csv')
+    participation_df.to_csv('../data/participation.csv', index=False)
 
 
 if __name__ == '__main__':
