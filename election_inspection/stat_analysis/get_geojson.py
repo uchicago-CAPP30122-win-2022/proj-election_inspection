@@ -36,7 +36,12 @@ for map_name in maps_dict:
     map_json = maps_dict[map_name]
     map_gdf = gp.read_file(map_json)
     map_gdf['DISTRICT'] = map_gdf['DISTRICT'].astype('int')
-    map_gdf.join(to_export.set_index('DISTRICT'), on = 'DISTRICT')
+    map_gdf = map_gdf.join(to_export.set_index('DISTRICT'), on = 'DISTRICT')
+    map_gdf = map_gdf.rename(columns = {"pop_perc_white" : "PCT_WHITE",
+                              "pop_perc_black" : "PCT_BLACK",
+                              "c_gini_index" : "GINI_INDEX",
+                              "c_perc_hs_grad": "PCT_HS_GRAD",
+                              "predicted_turnout" : "PREDICTED_TURNOUT"})
     map_gdf.to_file('election_inspection/visual_analysis/' + map_name + '.geojson', driver = 'GeoJSON')
 
 
