@@ -12,6 +12,8 @@ Last modified: 16/03/2021
 import pandas as pd
 import geopandas as gp
 
+directory =
+
 # Map files
 maps_dict = {}
 maps_dict['apple'] = 'election_inspection/visual_analysis/apple/Apple V2.json'

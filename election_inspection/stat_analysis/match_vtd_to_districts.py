@@ -20,16 +20,16 @@ def run_matching():
     '''
     '''
     # Map files
-    apple_json = 'visual_analysis/apple/Apple V2.json'
-    birch_json = 'visual_analysis/birch/Birch V2.json'
-    chestnut_json = 'visual_analysis/chestnut/Chestnut.json'
-    lange_json = 'visual_analysis/lange/Lange Congressional.json'
-    szetela_json = 'visual_analysis/szetela/szetela.json'
+    apple_json = 'election_inspection/visual_analysis/apple/Apple V2.json'
+    birch_json = 'election_inspection/visual_analysis/birch/Birch V2.json'
+    chestnut_json = 'election_inspection/visual_analysis/chestnut/Chestnut.json'
+    lange_json = 'election_inspection/visual_analysis/lange/Lange Congressional.json'
+    szetela_json = 'election_inspection/visual_analysis/szetela/szetela.json'
 
     to_ignore = ['STATEFP20', 'COUNTYFP20', 'VTDST20', 'VTDI20',
                 'NAME20', 'NAMELSAD20', 'LSAD20', 'MTFCC20',
                 'FUNCSTAT20', 'ALAND20', 'AWATER20']
-    vtd_shp = 'visual_analysis/tl_2020_26_vtd20/tl_2020_26_vtd20.shp'
+    vtd_shp = 'election_inspection/visual_analysis/tl_2020_26_vtd20/tl_2020_26_vtd20.shp'
     vtd_df = gp.read_file(vtd_shp,
                         ignore_fields = to_ignore,
                         ignore_geometry = True)
@@ -42,11 +42,11 @@ def run_matching():
                                                         vtd_df[lat],
                                                         crs = coord_ref_sys))
 
-    csv_joined_files(apple_json, vtd_gdf, 'stat_analysis/apple_vtd_joined.csv')
-    csv_joined_files(birch_json, vtd_gdf, 'stat_analysis/birch_vtd_joined.csv')
-    csv_joined_files(chestnut_json, vtd_gdf, 'stat_analysis/chestnut_vtd_joined.csv')
-    csv_joined_files(lange_json, vtd_gdf, 'stat_analysis/lange_vtd_joined.csv')
-    csv_joined_files(szetela_json, vtd_gdf, 'stat_analysis/szetela_vtd_joined.csv')
+    csv_joined_files(apple_json, vtd_gdf, 'election_inspection/stat_analysis/apple_vtd_joined.csv')
+    csv_joined_files(birch_json, vtd_gdf, 'election_inspection/stat_analysis/birch_vtd_joined.csv')
+    csv_joined_files(chestnut_json, vtd_gdf, 'election_inspection/stat_analysis/chestnut_vtd_joined.csv')
+    csv_joined_files(lange_json, vtd_gdf, 'election_inspection/stat_analysis/lange_vtd_joined.csv')
+    csv_joined_files(szetela_json, vtd_gdf, 'election_inspection/stat_analysis/szetela_vtd_joined.csv')
 
 
 def csv_joined_files(map_json, vtd_gdf, filename):
