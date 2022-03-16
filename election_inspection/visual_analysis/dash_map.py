@@ -1,3 +1,4 @@
+from distutils.log import debug
 import dash
 import dash_leaflet.express as dlx
 from dash import html, dcc, dash_table
@@ -113,7 +114,8 @@ def run_dash():
         choro.add_to(m)
         m.keep_in_front(geojson)
         m.save('district_map.html')
-        return open('election_inspection/visual_analysis/district_map.html', 'r').read()
+        print('map')
+        return open('district_map.html', 'r').read()
 
     @app.callback(dash.dependencies.Output('tbl', 'data'), 
                 [dash.dependencies.Input('map_version', 'value')])
@@ -142,5 +144,4 @@ def run_dash():
                     """
         return body_text
     
-    print('here')
     app.run_server()
