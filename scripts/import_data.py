@@ -69,7 +69,6 @@ def process_data():
     lagged_2018_elections_df = lagged_2018_elections_df.drop(
                                                     ['turnout2018'], axis=1)
 
-
     # Ethnic groupings data (percentage of ethnic groupings)
     race_census_df = pd.read_csv('../data/csv/mi_pl2020_vtd.csv', header=0)
     race_census_df = race_census_df.loc[:, ['GEOID20', 'COUNTY', 'VTD', 'POP100',
@@ -230,6 +229,27 @@ def process_data():
                                     for county in gini_census_df['county_name']]
     gini_census_df = gini_census_df.drop(['county_name'], axis=1)
 
+    # Education data (percent of population that falls within certain 
+    # educational levels)
+    edu_census_df = pd.read_csv(
+                        '.../data/csv/ACSST5Y2019.S1501-2022-03-16T014444.csv',
+                        header=0, index_col=0)
+    edu_census_df = edu_census_df.iloc[[9, 15], [i for i in range(2, 996, 12)]]
+    edu_census_df = edu_census_df.transpose()
+    edu_census_df = edu_census_df.reset_index()
+    edu_census_df.columns = ['county_name', 'c_perc_hs_grad', 'c_perc_uni_grad']
+    edu_census_df['county_name'] = [re.sub(
+                                r'(County, Michigan!!Percent!!Estimate$)', '',
+                                county).strip('. ') for county in
+                                edu_census_df['county_name']]
+    edu_census_df['county_code'] = [county_name_to_code[county]
+                                    for county in edu_census_df['county_name']]
+    edu_census_df = edu_census_df.drop(['county_name'], axis=1)
+    edu_census_df['c_perc_hs_grad'] = [float(perc.strip('%')) * 0.01 for perc in 
+                                                edu_census_df['c_perc_hs_grad']]
+    edu_census_df['c_perc_uni_grad'] = [float(perc.strip('%')) * 0.01 for perc in 
+                                                edu_census_df['c_perc_uni_grad']]
+
 
     ## VTD to County FIPS code mapping
     vtd_to_county_map = {row[0]: row[1] for _, row in 
@@ -249,7 +269,8 @@ def process_data():
                     .merge(urban_pop_census_df, how='left', on='county_code')
                     .merge(growth_census_df, how='left', on='county_code')
                     .merge(home_ownership_census_df, how='left', on='county_code')
-                    .merge(gini_census_df, how='left', on='county_code'))
+                    .merge(gini_census_df, how='left', on='county_code')
+                    .merge(edu_census_df, how='left', on='county_code'))
 
 
     ## Aggregate VTD population for each county in dictionary
@@ -307,9 +328,9 @@ def process_data():
                         'pop_perc_white', 'pop_perc_black', 'pop_perc_am_indian', 
                         'pop_perc_asian', 'pop_perc_pac_islander',  
                         'c_pop_pct_urban', 'c_pop_perc_change', 
-                        'c_pop_perc_migration', 'c_gini_index', 
-                        'c_perc_owner_occupied_house',  'total2020_voted', 
-                        'turnout2020_registered']]
+                        'c_pop_perc_migration', 'c_gini_index', 'c_perc_hs_grad',
+                        'c_perc_uni_grad', 'c_perc_owner_occupied_house',  
+                        'total2020_voted', 'turnout2020_registered']]
 
 
     participation_df.to_csv('../data/participation.csv')
