@@ -120,35 +120,21 @@ def process_data():
     migration_census_df['county_name'] = [re.sub(r'(County$)', '',
                                         county).strip() for county in
                                         migration_census_df['county_name']]
-    # Create a 'county name' to 'county code' mapping for later use
+    
+    # Create a 'county name' to 'county code' mapping for use below
     county_name_to_code = {row[1]: row[0] for _, row in 
                                             migration_census_df.iterrows()}
     migration_census_df = migration_census_df.drop(['county_name'], axis=1)
     migration_census_df = migration_census_df.groupby('county_code').sum()
     migration_census_df = migration_census_df.reset_index()
 
-    # Population growth data
-    growth_census_df = pd.read_excel('../data/csv/co-est2019-annchg-26.xlsx',
-                                    skiprows=2,
-                                    header=0)
-    growth_census_df = growth_census_df.iloc[:, [0, 4]]
-    growth_census_df = growth_census_df.dropna()
-    growth_census_df = growth_census_df.rename(columns={
-        growth_census_df.columns[0]: 'county_name',
-        growth_census_df.columns[1]: 'c_pop_perc_change'})
-    growth_census_df = growth_census_df.drop([2], axis=0)
-    growth_census_df['county_name'] = [re.sub(r'(County, Michigan$)', '',
-                                        county).strip('. ') for county in
-                                        growth_census_df['county_name']]
-    growth_census_df['county_code'] = [county_name_to_code[county]
-                                for county in growth_census_df['county_name']]
-    growth_census_df = growth_census_df.drop(['county_name'], axis=1)
-
-    # Home ownership data
+    # Create a census tract to county mapping for use below
     tract_to_county_df = pd.read_csv('../data/csv/mi_pl2020_t.csv', header=0)
     tract_to_county_df = tract_to_county_df.loc[:, ['GEOID', 'COUNTY']]
     tract_to_county_dict = {row[0]: row[1] for _, row in 
                                                 tract_to_county_df.iterrows()}
+
+    # Home ownership data
     home_ownership_census_df = pd.read_csv(
         '../data/csv/ACSDP5Y2018.DP04_data_with_overlays_2022-03-12T164813.csv',
                                                                     header=0)
@@ -175,7 +161,34 @@ def process_data():
     home_ownership_census_df['county_code'] = (
                         home_ownership_census_df['county_code'].astype('int64'))
 
-    # Urban population data
+    # Population growth data (rate of change from 2018 to 2019)
+    pop_2019_census_df = pd.read_csv(
+        '../data/csv/ACSDT5Y2019.B01003_data_with_overlays_2021-11-17T211211.csv', 
+        header=0)
+    pop_2019_census_df = pop_2019_census_df.loc[1:, ['GEO_ID', 'B01003_001E']]
+    pop_2018_census_df = pd.read_csv(
+        '../data/csv/ACSDT5Y2018.B01003_data_with_overlays_2022-03-15T163934.csv', 
+        header=0)
+    pop_2018_census_df = pop_2018_census_df.loc[1:, ['GEO_ID', 'B01003_001E']]
+    growth_census_df = pop_2019_census_df.merge(
+                pop_2018_census_df, on='GEO_ID', suffixes={'_2019', '_2018'})
+    growth_census_df['county_code'] = [tract_to_county_dict[geoid] 
+                                if tract_to_county_dict.get(geoid) else np.nan
+                                for geoid in growth_census_df['GEO_ID']]
+    growth_census_df['B01003_001E_2018'] = (growth_census_df['B01003_001E_2018']
+                                                                .astype('int64'))
+    growth_census_df['B01003_001E_2019'] = (growth_census_df['B01003_001E_2019']
+                                                                .astype('int64'))
+    growth_census_df = growth_census_df.groupby(['county_code']).sum()
+    growth_census_df = growth_census_df.reset_index()
+    growth_census_df['c_pop_perc_change'] = (
+            (growth_census_df['B01003_001E_2019'] - 
+            growth_census_df['B01003_001E_2018']) /
+            growth_census_df['B01003_001E_2019'])
+    growth_census_df = growth_census_df.drop(
+                            ['B01003_001E_2018', 'B01003_001E_2019'], axis=1)
+
+    # Urban population data ()
     urban_pop_census_df = pd.read_excel('../data/csv/PctUrbanRural_County.xls',
                                          header=0)
     urban_pop_census_df = urban_pop_census_df[urban_pop_census_df['STATENAME'] ==
@@ -228,11 +241,19 @@ def process_data():
                     .merge(home_ownership_census_df, how='left', on='county_code')
                     .merge(gini_census_df, how='left', on='county_code'))
 
+    # Aggregate VTD population for each county in dictionary
+    c_pop_df = participation_df.loc[:, ['county_code', 'total_pop']]
+    c_pop_df = c_pop_df.groupby(['county_code']).sum()
+    c_pop_df = c_pop_df.reset_index()
+    c_pop_dict = {row[0]: row[1] for _, row in c_pop_df.iterrows()}
+    # Create county aggregated population column
+    participation_df['c_total_pop'] = [c_pop_dict[cc] 
+                                for cc in participation_df['county_code']]
     
     # Final feature calculations
     participation_df['c_pop_perc_migration'] = (
                                     participation_df['gross_county_migration'] /
-                                    participation_df['total_pop'])
+                                    participation_df['c_total_pop'])
     participation_df['pop_perc_one_race'] = (
                                     participation_df['pop_one_race'] /
                                     participation_df['total_pop'])
@@ -260,18 +281,19 @@ def process_data():
     participation_df = participation_df.drop(['gross_county_migration',
                     'pop_one_race', 'pop_two_races', 'pop_three_or_more_races',
                     'pop_white_alone', 'pop_black_alone', 'pop_am_indian_alone',
-                    'pop_asian_alone', 'pop_pac_islander_alone'], axis=1)
+                    'pop_asian_alone', 'pop_pac_islander_alone', 'c_total_pop'],
+                     axis=1)
 
 
     # Reordering of dataframe
     participation_df = participation_df.rename(columns=
                                                 {'county_code': 'COUNTY_FIPS'})
-    participation_df = participation_df[['GEOID20', 'VTD', 'total_pop', 
-                        'total_pop_log', 'turnout2018', '2020_vote_share_diff',
-                        'pop_perc_one_race', 'pop_perc_two_races', 
-                        'pop_perc_three_or_more_races', 'pop_perc_white', 
-                        'pop_perc_black', 'pop_perc_am_indian', 'pop_perc_asian',
-                        'pop_perc_pac_islander', 'COUNTY_FIPS', 
+    participation_df = participation_df[['GEOID20', 'VTD', 'COUNTY_FIPS', 
+                        'total_pop', 'total_pop_log', 'turnout2018', 
+                        '2020_vote_share_diff', 'pop_perc_one_race', 
+                        'pop_perc_two_races', 'pop_perc_three_or_more_races', 
+                        'pop_perc_white', 'pop_perc_black', 'pop_perc_am_indian', 
+                        'pop_perc_asian', 'pop_perc_pac_islander',  
                         'c_pop_pct_urban', 'c_pop_perc_change', 
                         'c_pop_perc_migration', 'c_gini_index', 
                         'c_perc_owner_occupied_house',  'total2020_voted', 
