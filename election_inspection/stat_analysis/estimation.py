@@ -45,11 +45,8 @@ map_names = ['apple', 'birch', 'chestnut', 'lange', 'szetela']
 for name in map_names:
     write_prediction_csv(betas, best_X_cols, name, clean)
 
-
 # apple = pd.read_csv('stat_analysis/apple_vtd_joined.csv')
 # birch = pd.read_csv('stat_analysis/birch_vtd_joined.csv')
 # chestnut = pd.read_csv('stat_analysis/chestnut_vtd_joined.csv')
 # lange = pd.read_csv('stat_analysis/lange_vtd_joined.csv')
 # szetela = pd.read_csv('stat_analysis/szetela_vtd_joined.csv')
-
-

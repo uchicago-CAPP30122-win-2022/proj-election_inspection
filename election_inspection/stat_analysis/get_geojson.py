@@ -9,18 +9,23 @@ Author: Victor Perez
 Last modified: 10/03/2021
 '''
 
-import geopandas
 import pandas as pd
+import geopandas as gp
 
-filenames = ['map1', 'map2', 'map3', 'map4', 'map5']
+# Map files
+apple_json = 'visual_analysis/apple/Apple V2.json'
+birch_json = 'visual_analysis/birch/Birch V2.json'
+chestnut_json = 'visual_analysis/chestnut/Chestnut.json'
+lange_json = 'visual_analysis/lange/Lange Congressional.json'
+szetela_json = 'visual_analysis/szetela/szetela.json'
 
-for file in filenames:
-    input_csv = 'data/' + filename + '_results.csv'
+map_names = ['apple', 'birch', 'chestnut', 'lange', 'szetela']
+keep_cols = ['DISTRICT']
+
+for map_name in map_names:
+    input_csv = 'stat_analysis/' + map_name + '_results.csv'
     input_df = pd.read_csv(input_csv)
-    output_geojson
-
-#Join datasets using vtd
-
-#Join datasets using district number
-
-#Export to geojson
+    to_export = input_df[keep_cols]
+    map_gdf = gp.read_file(map_name + '_json')
+    to_export.join(map_gdf.set_index('DISTRICT'), on = 'DISTRICT')
+    to_export.to_file('visual_analysis/' + map_name + '_results.geojson', driver = 'GeoJSON')
