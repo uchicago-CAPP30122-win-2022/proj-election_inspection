@@ -278,7 +278,7 @@ def process_data():
                         'total2020_voted', 'turnout2020_registered']]
 
 
-    participation_df.to_csv('../data/participation.csv', index=False)
+    participation_df.to_csv('participation_dataset.csv', mode='x', index=False)
 
 
 if __name__ == '__main__':

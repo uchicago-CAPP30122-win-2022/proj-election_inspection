@@ -16,32 +16,42 @@ Last modified: 10/03/2021
 
 import geopandas as gp
 
-# Map files
-apple_json = 'visual_analysis/apple/Apple V2.json'
-birch_json = 'visual_analysis/birch/Birch V2.json'
-chestnut_json = 'visual_analysis/chestnut/Chestnut.json'
-lange_json = 'visual_analysis/lange/Lange Congressional.json'
-szetela_json = 'visual_analysis/szetela/szetela.json'
+def run_matching():
+    '''
+    '''
+    # Map files
+    apple_json = 'visual_analysis/apple/Apple V2.json'
+    birch_json = 'visual_analysis/birch/Birch V2.json'
+    chestnut_json = 'visual_analysis/chestnut/Chestnut.json'
+    lange_json = 'visual_analysis/lange/Lange Congressional.json'
+    szetela_json = 'visual_analysis/szetela/szetela.json'
 
-to_ignore = ['STATEFP20', 'COUNTYFP20', 'VTDST20', 'VTDI20',
-            'NAME20', 'NAMELSAD20', 'LSAD20', 'MTFCC20',
-            'FUNCSTAT20', 'ALAND20', 'AWATER20']
-vtd_shp = 'visual_analysis/tl_2020_26_vtd20/tl_2020_26_vtd20.shp'
-vtd_df = gp.read_file(vtd_shp,
-                      ignore_fields = to_ignore,
-                      ignore_geometry = True)
+    to_ignore = ['STATEFP20', 'COUNTYFP20', 'VTDST20', 'VTDI20',
+                'NAME20', 'NAMELSAD20', 'LSAD20', 'MTFCC20',
+                'FUNCSTAT20', 'ALAND20', 'AWATER20']
+    vtd_shp = 'visual_analysis/tl_2020_26_vtd20/tl_2020_26_vtd20.shp'
+    vtd_df = gp.read_file(vtd_shp,
+                        ignore_fields = to_ignore,
+                        ignore_geometry = True)
 
-lon = 'INTPTLON20'
-lat = 'INTPTLAT20'
-coord_ref_sys = 'EPSG:4326'
-vtd_gdf = gp.GeoDataFrame(vtd_df,
-                          geometry = gp.points_from_xy(vtd_df[lon],
-                                                       vtd_df[lat],
-                                                       crs = coord_ref_sys))
+    lon = 'INTPTLON20'
+    lat = 'INTPTLAT20'
+    coord_ref_sys = 'EPSG:4326'
+    vtd_gdf = gp.GeoDataFrame(vtd_df,
+                            geometry = gp.points_from_xy(vtd_df[lon],
+                                                        vtd_df[lat],
+                                                        crs = coord_ref_sys))
+
+    csv_joined_files(apple_json, vtd_gdf, 'stat_analysis/apple_vtd_joined.csv')
+    csv_joined_files(birch_json, vtd_gdf, 'stat_analysis/birch_vtd_joined.csv')
+    csv_joined_files(chestnut_json, vtd_gdf, 'stat_analysis/chestnut_vtd_joined.csv')
+    csv_joined_files(lange_json, vtd_gdf, 'stat_analysis/lange_vtd_joined.csv')
+    csv_joined_files(szetela_json, vtd_gdf, 'stat_analysis/szetela_vtd_joined.csv')
+
 
 def csv_joined_files(map_json, vtd_gdf, filename):
     '''
-    Writes a csv with  the map of vtd ids and the district ids
+    Writes a csv with the map of vtd ids and the district ids
     Inputs:
         map_json (json file) district map file
         vtd_gdf (geopandas dataframe) VTD file
@@ -57,9 +67,3 @@ def csv_joined_files(map_json, vtd_gdf, filename):
     join_gdf.drop('geometry', axis = 1).to_csv(filename,
                                                 columns = keep,
                                                 index = False)
-
-csv_joined_files(apple_json, vtd_gdf, 'stat_analysis/apple_vtd_joined.csv')
-csv_joined_files(birch_json, vtd_gdf, 'stat_analysis/birch_vtd_joined.csv')
-csv_joined_files(chestnut_json, vtd_gdf, 'stat_analysis/chestnut_vtd_joined.csv')
-csv_joined_files(lange_json, vtd_gdf, 'stat_analysis/lange_vtd_joined.csv')
-csv_joined_files(szetela_json, vtd_gdf, 'stat_analysis/szetela_vtd_joined.csv')

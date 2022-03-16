@@ -19,14 +19,15 @@ def run_analysis():
     print("Created mapping of vtds to new districts and output csvs to 'stat_analysis/' directory.\n")
     input('Press any key to continue...')
 
+    exec('/stat_analysis/estimation.py')
+    print("Created mapping of vtds to new districts and output csvs to 'stat_analysis/' directory.\n")
+    input('Press any key to continue...')
 
+    exec('/stat_analysis/get_geojson.py')
+    print("Created mapping of vtds to new districts and output csvs to 'stat_analysis/' directory.\n")
+    input('Press any key to continue...')
 
-
-
-    exec('/visual_analysis/dash_map.py')
-
-
-
+    # Create visual 
 
 
 
