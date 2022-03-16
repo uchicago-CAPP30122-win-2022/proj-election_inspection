@@ -12,7 +12,7 @@ Last modified: 15/03/2021
 import pandas as pd
 import estimation_util
 
-clean = pd.read_csv('working_dataset.csv', index_col = 0)
+clean = pd.read_csv('election_inspection/data_cleaning/participation_dataset.csv', index_col = 0)
 
 # Define the index position of the explanatory variables
 X_cols = list(range(1,20))
