@@ -253,7 +253,7 @@ def process_data():
                                 for cc in participation_df['county_code']]
     
 
-    ## Final features calculations (make population totals percentages)
+    ## Final features calculations (transform population totals to percentages)
     participation_df['c_pop_perc_migration'] = (
                                     participation_df['gross_county_migration'] /
                                     participation_df['c_total_pop'])
