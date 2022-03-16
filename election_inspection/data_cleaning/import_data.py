@@ -95,7 +95,7 @@ def process_data():
     race_census_df = race_census_df[missing_obs]
     race_census_df['GEOID20'] = race_census_df['GEOID20'].astype('int64')
 
-    # 2020 presidential election race closeness data 
+    # Lagged 2018 presidential election race closeness data 
     election2020_closeness_df = pd.read_csv('data/mi_2020_2020_vtd.csv',
                                                                     header=0)
     # Election closeness calculated by taking difference of top two candidates
