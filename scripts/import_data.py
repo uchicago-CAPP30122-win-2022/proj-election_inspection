@@ -38,7 +38,7 @@ def process_data():
     turnout2020_df = turnout2020_df[missing_obs]
     turnout2020_df['GEOID20'] = turnout2020_df['GEOID20'].astype('int64')
 
-    # Ethnic groupings data
+    # Ethnic groupings data (percentage of ethnic groupings)
     race_census_df = pd.read_csv('../data/csv/mi_pl2020_vtd.csv', header=0)
     race_census_df = race_census_df.loc[:, ['GEOID20', 'COUNTY', 'VTD', 'POP100',
                                             'P0010002', 'P0010003', 'P0010004', 
@@ -64,7 +64,7 @@ def process_data():
     race_census_df = race_census_df[missing_obs]
     race_census_df['GEOID20'] = race_census_df['GEOID20'].astype('int64')
 
-    # Lagged election data
+    # Lagged election data (voter turnout in 2018 midterms)
     lagged_2018_elections_df = pd.read_csv('../data/csv/'
                                             'mi_2018_2020_vtd.csv', header=0)
     lagged_2018_elections_df = lagged_2018_elections_df.loc[:, ['GEOID20',
@@ -87,7 +87,7 @@ def process_data():
     lagged_2018_elections_df['GEOID20'] = (lagged_2018_elections_df['GEOID20']
                                                                 .astype('int64'))
 
-    # 2020 presidential election race closeness data
+    # 2020 presidential election race closeness data 
     election2020_closeness_df = pd.read_csv('../data/csv/mi_2020_2020_vtd.csv',
                                                                      header=0)
     # Election closeness calculated by taking difference of top two candidates
@@ -104,7 +104,8 @@ def process_data():
 
 
     ## Data from Census Bureau (County level)
-    # Migration data
+    # Migration data (percent of county population that either came to or 
+    # left the county)
     migration_census_df = pd.read_excel('../data/csv/county-to-county-2015-2019-'
                                         'ins-outs-nets-gross.xlsx',
                                         sheet_name='Michigan',
@@ -134,7 +135,7 @@ def process_data():
     tract_to_county_dict = {row[0]: row[1] for _, row in 
                                                 tract_to_county_df.iterrows()}
 
-    # Home ownership data
+    # Home ownership data (percent of owner occupied of total housing units)
     home_ownership_census_df = pd.read_csv(
         '../data/csv/ACSDP5Y2018.DP04_data_with_overlays_2022-03-12T164813.csv',
                                                                     header=0)
@@ -188,7 +189,7 @@ def process_data():
     growth_census_df = growth_census_df.drop(
                             ['B01003_001E_2018', 'B01003_001E_2019'], axis=1)
 
-    # Urban population data ()
+    # Urban population data (percent of population living in an urban area)
     urban_pop_census_df = pd.read_excel('../data/csv/PctUrbanRural_County.xls',
                                          header=0)
     urban_pop_census_df = urban_pop_census_df[urban_pop_census_df['STATENAME'] ==
@@ -205,7 +206,7 @@ def process_data():
     urban_pop_census_df = urban_pop_census_df.rename(columns=
                                                     {'COUNTY': 'county_code'})
 
-    # Income inequality data
+    # Income inequality data (gini index per county)
     gini_census_df = pd.read_csv(
                         '../data/csv/ACSDT5Y2019.B19083-2022-03-14T021522.csv',
                         header=0)
