@@ -12,3 +12,4 @@ deactivate
 
 echo -e "Install is complete."
 
+python3 election_inspection
