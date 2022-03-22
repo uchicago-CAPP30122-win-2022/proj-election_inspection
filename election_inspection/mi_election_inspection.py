@@ -5,6 +5,7 @@ from election_inspection.stat_analysis.get_geojson import run_get_geojson
 from election_inspection.visual_analysis.dash_map import run_dash
 import os
 
+
 def run_analysis():
     '''
     Main function to run election inspection analysis.
@@ -28,23 +29,23 @@ def run_analysis():
     # Run script to collect and clean data
     process_data()
     print("Cleaned csv file outputted to 'data_cleaning/data' directory.\n")
-    input('Press any key to continue...')
+    input('Press enter to continue...')
 
     # Run scripts to perform analysis
     print("Creating mapping of vtds to new districts and output csvs to "
                                     "'stat_analysis/' directory.\n")
     run_matching()
-    input('Press any key to continue...')
+    input('Press enter to continue...')
 
     print("Estimating the regression model of voter turnout and outputting csvs to"
                                     "'stat_analysis/' directory.\n")
     run_estimation()
-    input('Press any key to continue...')
+    input('Press enter to continue...')
 
     print("Creating geojsons of the estimation results for proposed districts "
                                     "in the 'visual_analysis/' directory.\n")
     run_get_geojson()    
-    input('Press any key to continue...')
+    input('Press enter to continue...')
 
     # Create visualization dashboard
     print("Starting visualization dashboard.\n")
