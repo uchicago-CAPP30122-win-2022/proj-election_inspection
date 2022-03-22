@@ -13,3 +13,6 @@ vitrtual environment using:
 Then enter the virtual environment and run the program:  
     ``source env/bin/activate``  
     ``python -m election_inspection``
+
+Following the analysis, the dashboard should open up in your browser.  
+If you're using VSCode, be sure to click on the pop-up to 'Open in Browser'.
