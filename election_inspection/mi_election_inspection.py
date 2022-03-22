@@ -28,22 +28,22 @@ def run_analysis():
 
     # Run script to collect and clean data
     process_data()
-    print("Cleaned csv file outputted to 'data_cleaning/data' directory.\n")
+    print("Cleaned csv file outputted to `data_cleaning/data` directory.\n")
     input('Press enter to continue...')
 
     # Run scripts to perform analysis
-    print("Creating mapping of vtds to new districts and output csvs to "
-                                    "'stat_analysis/' directory.\n")
+    print("Creating mapping of vtds to new districts and outputting csv files to "
+                                    "`stat_analysis` directory...\n")
     run_matching()
     input('Press enter to continue...')
 
-    print("Estimating the regression model of voter turnout and outputting csvs to"
-                                    "'stat_analysis/' directory.\n")
+    print("Estimating the regression model of voter turnout and outputting csv "
+                                    "files to `stat_analysis` directory...\n")
     run_estimation()
     input('Press enter to continue...')
 
     print("Creating geojsons of the estimation results for proposed districts "
-                                    "in the 'visual_analysis/' directory.\n")
+                                    "in the `visual_analysis` directory...\n")
     run_get_geojson()    
     input('Press enter to continue...')
 
