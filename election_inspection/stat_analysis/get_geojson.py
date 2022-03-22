@@ -9,9 +9,14 @@ Author: Victor Perez
 Last modified: 16/03/2021
 '''
 
-import stat_analysis
+import election_inspection. stat_analysis
 import pandas as pd
 import geopandas as gp
+import warnings
+
+# Suppress warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 
 def run_get_geojson():
     # Map files

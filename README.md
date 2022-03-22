@@ -6,7 +6,8 @@ provide more information on our methodology and results.
 Notes:
 To run this project first enter the top level directory and install the 
 vitrtual environment using: 
-    ``install_election_inspection.sh``
+    ``bash install_election_inspection.sh``
 
-Then run:
+Then enter the virtual environment and run the program:
+    ``source env/bin/activate``
     ``python -m election_inspection``

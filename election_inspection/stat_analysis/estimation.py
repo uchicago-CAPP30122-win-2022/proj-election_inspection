@@ -8,7 +8,7 @@ Script to estimate the regression model of voter turnout
 Author: Victor Perez
 Last modified: 15/03/2021
 '''
-from stat_analysis import estimation_util
+from election_inspection.stat_analysis import estimation_util
 import pandas as pd
 
 def run_estimation():

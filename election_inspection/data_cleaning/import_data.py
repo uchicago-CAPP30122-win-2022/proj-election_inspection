@@ -9,7 +9,7 @@ estimation.
 Author: Christian Jordan
 '''
 
-from data_cleaning.census_data_collector import CensusQuery
+from election_inspection.data_cleaning.census_data_collector import CensusQuery
 import pandas as pd
 import numpy as np
 
@@ -80,7 +80,8 @@ def process_data():
                                             'P0010005', 'P0010006', 'P0010007', 
                                             'P0010009', 'P0010026', 'P0010047', 
                                             'P0010063', 'P0010070']]
-    race_census_df['total_pop_log'] = np.log(race_census_df['POP100'])
+    race_census_df['total_pop_log'] = [np.log(log_pop) if log_pop else 0 
+                                        for log_pop in race_census_df['POP100']]
     race_census_df['pop_three_or_more_races'] = (race_census_df['P0010026']
                                                 + race_census_df['P0010047']
                                                 + race_census_df['P0010063']
